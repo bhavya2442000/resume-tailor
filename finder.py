@@ -32,20 +32,17 @@ SITES = {
     "Lever": ["jobs.lever.co"],
     "Workday": ["myworkdayjobs.com"],
 }
-QUERIES = [  # each one runs on every site
-    "data analyst Los Angeles",
-    "financial analyst FP&A Los Angeles",
-    "business operations analyst Los Angeles",
-    "analyst Irvine Orange County",
-    "data analyst remote United States",
-    "financial analyst remote United States",
+# Fill in these for the jobs you want. The README has full examples (software, marketing, nursing).
+QUERIES = [  # web searches that find companies, each run on every site; a job title plus a place
+    # "software engineer Seattle",
+    # "software engineer remote United States",
 ]
-ROLE = "data, reporting, business, operations, strategy, finance/FP&A, revenue or research analyst work"
-NOT_WANTED = "clinical, legal, security or IT support roles, behavior analyst"
-TITLE_WORDS = ["analyst"]  # a title must have a word starting with one of these; [] keeps every title
+ROLE = ""        # the kind of work you want, in plain words, e.g. "backend or full stack software engineering"
+NOT_WANTED = ""  # nearby fields to leave out, e.g. "sales engineer, IT support"
+TITLE_WORDS = [] # a title must have a word starting with one of these, e.g. ["engineer", "developer"]; [] keeps every title
 REMEMBER_COMPANIES = True  # also check every company found on earlier days (free: no tokens)
-LOCATION = "Los Angeles area (on-site or hybrid) or remote in the US"
-LEVEL = "about 2 years of work experience plus a master's degree (entry to mid level)"
+LOCATION = "anywhere in the US, on-site, hybrid or remote"
+LEVEL = "entry to mid level"
 MAX_AGE_DAYS = 14   # drop postings older than this
 MAX_YEARS = 3       # drop postings whose lowest "N+ years of experience" is above this
 MAX_READ = 80       # newest postings read in full and sent to the picking call
@@ -57,7 +54,7 @@ EFFORT = "medium"   # for the picking call; the search call always runs at low
 # Titles dropped for being too senior. Remove "manager" etc. if that is the level you want.
 TITLE_SKIP = re.compile(r"\b(senior|sr|lead|principal|staff|manager|director|head|vp|vice president|chief|architect)\b", re.I)
 # Posting locations kept; an empty location is kept too. Match this to LOCATION above.
-LOCATION_KEEP = re.compile(r"\b(CA|California|Los Angeles|LA|Remote|Anywhere)\b|^(US|USA|United States( of America)?)$|^$", re.I)
+LOCATION_KEEP = re.compile(r"", re.I)  # keeps every location; e.g. r"\b(WA|Seattle|Remote)\b|^$" for Seattle or remote
 TEXT_SKIP = re.compile(r"security clearance|active (secret|top secret|ts)\b|ts/sci", re.I)
 YEARS = re.compile(r"(\d{1,2})\s*(?:\+|plus)?\s*(?:(?:-|–|to)\s*\d{1,2}\s*\+?\s*)?years?\b[^.\n]{0,40}?experience", re.I)
 # ---------------------------------
@@ -69,7 +66,7 @@ You get the candidate's profile and a numbered list of postings. Pick every post
 - The kind of work they want: {role}, using their skills.
 - Experience level they can get hired at: {level}.
 - Location fits: {location}.
-Leave out only clear mismatches: another field ({not_wanted}), a student-only program, or a location that doesn't fit."""
+Leave out only clear mismatches: another field{not_wanted}, a student-only program, or a location that doesn't fit."""
 
 lock = threading.Lock()  # the app reviews and the finder writes the same day file
 
@@ -258,7 +255,7 @@ def pick(jobs, log):
                            for i, j in enumerate(jobs))
     prompt = (f"<profile>\n{profile()}\n</profile>\n\n<postings>\n{postings}\n</postings>\n\n"
               f'Pick up to {PICKS}, best first. Reply with only a JSON array like [{{"i": 3, "why": "one short line: the fit"}}].')
-    text, tokens = tailor.call_claude(prompt, PICK_SYSTEM.format(role=ROLE, not_wanted=NOT_WANTED, location=LOCATION, level=LEVEL), effort=EFFORT)
+    text, tokens = tailor.call_claude(prompt, PICK_SYSTEM.format(role=ROLE, not_wanted=f" ({NOT_WANTED})" if NOT_WANTED else "", location=LOCATION, level=LEVEL), effort=EFFORT)
     try:
         picks = json.loads(text[text.find("["):text.rfind("]") + 1])
     except json.JSONDecodeError:
@@ -271,6 +268,8 @@ def find(log=print):
     JOBS.mkdir(exist_ok=True)
     today = time.strftime("%Y-%m-%d")
     run = {"at": time.strftime("%H:%M")}
+    if not QUERIES or not ROLE:
+        raise ValueError("Set up your search first: fill in QUERIES and ROLE at the top of finder.py (the README has examples).")
     links, run["search_tokens"] = search(log)
     companies = boards(links)
     found_today = len(companies)

@@ -11,7 +11,7 @@ Finds new jobs each morning in any field you choose, and builds a one-page resum
 1. Install [Claude Code](https://claude.com/claude-code) and sign in, so that `claude -p "hi"` works in a terminal.
 2. Install Google Chrome (it renders the PDFs) and Python 3.9 or later, then run `pip install pdfplumber`.
 3. Run `python3 app.py` (or double-click `Resume Tailor.command` on a Mac). The page opens at http://localhost:8765.
-4. Set up your search in `finder.py` (see [Set up your search](#set-up-your-search)). It comes set for entry-level analyst jobs in Los Angeles.
+4. Set up your search in `finder.py` (see [Set up your search](#set-up-your-search)). Find jobs won't run until you fill in `QUERIES` and `ROLE`.
 
 ## Your bullet bank
 
