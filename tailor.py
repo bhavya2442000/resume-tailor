@@ -148,7 +148,8 @@ BOILERPLATE = re.compile(
     r"|401\(?k|parental leave|paid time off|health, dental|wellness|tax withholding|privacy notice|e-verify|recruiting agencies",
     re.I)
 MUST_KEEP = re.compile(r"sponsor|visa|work authori|clearance|citizen|^(company|title|location):", re.I)
-ROLE_WORDS = re.compile(r"analyst|associate|specialist|scientist|engineer|consultant|manager|intern\\b|coordinator", re.I)
+ROLE_WORDS = re.compile(r"analyst|associate|specialist|scientist|engineer|developer|designer|consultant|manager|intern\b|coordinator"
+                        r"|nurse|technician|administrator|representative|accountant|writer|marketing", re.I)
 
 
 def trim_jd(jd):

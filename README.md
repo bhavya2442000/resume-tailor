@@ -1,6 +1,6 @@
 # Resume Tailor
 
-Finds new analyst jobs each morning and builds a one-page resume for each job you approve.
+Finds new jobs each morning in any field you choose, and builds a one-page resume for each job you approve.
 
 - Runs on your own computer, through your Claude subscription (`claude -p`). There's no API key and no separate bill.
 - Every fact and number comes from your own bullet bank (`master.json`). Any bullet that uses a number not in the bank is dropped.
@@ -11,7 +11,7 @@ Finds new analyst jobs each morning and builds a one-page resume for each job yo
 1. Install [Claude Code](https://claude.com/claude-code) and sign in, so that `claude -p "hi"` works in a terminal.
 2. Install Google Chrome (it renders the PDFs) and Python 3.9 or later, then run `pip install pdfplumber`.
 3. Run `python3 app.py` (or double-click `Resume Tailor.command` on a Mac). The page opens at http://localhost:8765.
-4. Open `finder.py` and set `QUERIES`, `LOCATION`, `LEVEL`, `MAX_YEARS` and the title rules for your search.
+4. Set up your search in `finder.py` (see [Set up your search](#set-up-your-search)). It comes set for entry-level analyst jobs in Los Angeles.
 
 ## Your bullet bank
 
@@ -38,6 +38,81 @@ Open **Your bullet bank** (http://localhost:8765/bank) to set it up:
 Want to look around first? Click **Try the example** to load Alex Rivera, a made-up analyst (`example/master.json`).
 
 Your `master.json` is in `.gitignore`, so it isn't committed by accident.
+
+## Set up your search
+
+All settings are at the top of `finder.py`. These decide what you get:
+
+| Setting | What it does |
+|---|---|
+| `QUERIES` | Web searches that find companies. Each one runs on Greenhouse, Lever and Workday. Use a job title plus a place: `"<title> <city>"`, `"<title> remote United States"`. 5-8 queries is plenty. |
+| `TITLE_WORDS` | A job title must have a word starting with one of these, e.g. `["engineer", "developer"]` (so `engineer` also matches Engineering). Checked for free, before any tokens. `[]` keeps every title. |
+| `ROLE` | The kind of work you want, in plain words. Claude uses it to pick jobs. |
+| `NOT_WANTED` | Nearby fields to leave out, e.g. `"sales engineer, IT support"`. |
+| `LOCATION` + `LOCATION_KEEP` | Where you can work, in words for Claude, and as a pattern the posting's location must match. |
+| `LEVEL`, `MAX_YEARS`, `TITLE_SKIP` | Your level in words; the most "N+ years" a posting may ask for; titles too senior for you. If you want manager roles, take `manager` out of `TITLE_SKIP`. |
+
+Greenhouse and Lever are used mostly by tech companies and startups; Workday by large companies, hospitals, universities and governments. Most fields are covered by at least one.
+
+**Examples**
+
+New-grad software engineer, Seattle or remote:
+
+```python
+QUERIES = [
+    "software engineer new grad Seattle",
+    "junior software engineer Seattle",
+    "backend engineer entry level remote United States",
+    "full stack developer remote United States",
+    "software engineer I Bellevue",
+]
+ROLE = "software engineering: backend, full stack or web development"
+NOT_WANTED = "sales engineer, support engineer, hardware, QA-only roles"
+TITLE_WORDS = ["engineer", "developer"]
+LOCATION = "Seattle area (on-site or hybrid) or remote in the US"
+LOCATION_KEEP = re.compile(r"\b(WA|Washington|Seattle|Bellevue|Redmond|Remote)\b|^(US|USA|United States)$|^$", re.I)
+LEVEL = "new graduate with a CS degree and one internship (entry level)"
+MAX_YEARS = 2
+```
+
+Marketing, New York, early career:
+
+```python
+QUERIES = [
+    "marketing coordinator New York",
+    "marketing associate New York",
+    "content marketing specialist New York",
+    "growth marketing associate remote United States",
+    "social media coordinator New York",
+]
+ROLE = "marketing: content, social media, email, growth or brand marketing"
+NOT_WANTED = "sales, account executive, marketing engineering"
+TITLE_WORDS = ["marketing", "content", "social media", "growth", "brand"]
+LOCATION = "New York City (on-site or hybrid) or remote in the US"
+LOCATION_KEEP = re.compile(r"\b(NY|New York|NYC|Brooklyn|Remote)\b|^(US|USA|United States)$|^$", re.I)
+LEVEL = "1-2 years of marketing experience and a bachelor's degree (entry level)"
+MAX_YEARS = 3
+```
+
+Registered nurse, Chicago (hospitals mostly use Workday):
+
+```python
+QUERIES = [
+    "registered nurse Chicago",
+    "RN medical surgical Chicago",
+    "new graduate nurse residency Chicago",
+    "registered nurse Evanston",
+]
+ROLE = "registered nurse: bedside or clinic nursing"
+NOT_WANTED = "nurse manager, nurse educator, travel nursing agencies"
+TITLE_WORDS = ["nurse", "RN"]
+LOCATION = "Chicago area, on-site"
+LOCATION_KEEP = re.compile(r"\b(IL|Illinois|Chicago|Evanston|Oak Park)\b|^$", re.I)
+LEVEL = "new graduate RN with a BSN and a state license"
+MAX_YEARS = 1
+```
+
+Keep your bullet bank in the same field: Claude picks jobs that fit your bank, and each resume is built only from it.
 
 ## Use
 

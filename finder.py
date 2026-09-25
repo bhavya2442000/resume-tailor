@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Find analyst jobs for the morning review list.
+"""Find jobs for the morning review list.
 
 Run: python3 finder.py   (or the Find jobs button on the app page)
 
@@ -26,7 +26,7 @@ import tailor
 JOBS = tailor.HERE / "jobs"
 COMPANIES = JOBS / "companies.json"
 
-# ---- Settings: edit freely ----
+# ---- Settings: edit freely. The README has examples for other fields. ----
 SITES = {
     "Greenhouse": ["job-boards.greenhouse.io", "boards.greenhouse.io"],
     "Lever": ["jobs.lever.co"],
@@ -40,9 +40,12 @@ QUERIES = [  # each one runs on every site
     "data analyst remote United States",
     "financial analyst remote United States",
 ]
+ROLE = "data, reporting, business, operations, strategy, finance/FP&A, revenue or research analyst work"
+NOT_WANTED = "clinical, legal, security or IT support roles, behavior analyst"
+TITLE_WORDS = ["analyst"]  # a title must have a word starting with one of these; [] keeps every title
 REMEMBER_COMPANIES = True  # also check every company found on earlier days (free: no tokens)
 LOCATION = "Los Angeles area (on-site or hybrid) or remote in the US"
-LEVEL = "about 2 years of analyst work plus a master's degree (entry to mid level)"
+LEVEL = "about 2 years of work experience plus a master's degree (entry to mid level)"
 MAX_AGE_DAYS = 14   # drop postings older than this
 MAX_YEARS = 3       # drop postings whose lowest "N+ years of experience" is above this
 MAX_READ = 80       # newest postings read in full and sent to the picking call
@@ -51,20 +54,22 @@ SKIP_COMPANIES = {"jobgether"}  # job-board sites that repost other companies' j
 PICKS = 20
 EFFORT = "medium"   # for the picking call; the search call always runs at low
 
-TITLE_MUST = re.compile(r"analyst", re.I)
+# Titles dropped for being too senior. Remove "manager" etc. if that is the level you want.
 TITLE_SKIP = re.compile(r"\b(senior|sr|lead|principal|staff|manager|director|head|vp|vice president|chief|architect)\b", re.I)
+# Posting locations kept; an empty location is kept too. Match this to LOCATION above.
 LOCATION_KEEP = re.compile(r"\b(CA|California|Los Angeles|LA|Remote|Anywhere)\b|^(US|USA|United States( of America)?)$|^$", re.I)
 TEXT_SKIP = re.compile(r"security clearance|active (secret|top secret|ts)\b|ts/sci", re.I)
 YEARS = re.compile(r"(\d{1,2})\s*(?:\+|plus)?\s*(?:(?:-|–|to)\s*\d{1,2}\s*\+?\s*)?years?\b[^.\n]{0,40}?experience", re.I)
 # ---------------------------------
+TITLE_MUST = re.compile(r"\b(?:" + "|".join(map(re.escape, TITLE_WORDS)) + ")" if TITLE_WORDS else ".", re.I)
 
 SEARCH_SYSTEM = "You find job posting links with web search. Reply with job posting URLs only, one per line, no other text."
 PICK_SYSTEM = """You screen job postings for one candidate, the way they would screen them themselves; they review your picks before applying.
 You get the candidate's profile and a numbered list of postings. Pick every posting that is a reasonable fit, best fit first:
-- Data, reporting, business, operations, strategy, finance/FP&A, revenue or research analyst work that uses their skills.
+- The kind of work they want: {role}, using their skills.
 - Experience level they can get hired at: {level}.
 - Location fits: {location}.
-Leave out only clear mismatches: another field (clinical, legal, security, IT support, behavior analyst), a student-only program, or a location outside the US."""
+Leave out only clear mismatches: another field ({not_wanted}), a student-only program, or a location that doesn't fit."""
 
 lock = threading.Lock()  # the app reviews and the finder writes the same day file
 
@@ -181,13 +186,14 @@ def open_jobs(board, today):
                     for j in tailor.get_json(f"https://api.{eu}lever.co/v0/postings/{co}?mode=json")]
         _, host, tenant, site = board
         out = []
-        for offset in (0, 20, 40):  # Workday pages 20 at a time; the newest analyst jobs are enough
-            page = post_json(f"https://{host}/wday/cxs/{tenant}/{site}/jobs",
-                             {"limit": 20, "offset": offset, "searchText": "analyst", "appliedFacets": {}})["jobPostings"]
-            out += [{"url": f"https://{host}/{site}{j['externalPath']}", "title": j["title"],
-                     "location": j.get("locationsText", ""), "posted": workday_date(j.get("postedOn"), today)} for j in page]
-            if len(page) < 20:
-                break
+        for word in TITLE_WORDS or [""]:
+            for offset in (0, 20, 40):  # Workday pages 20 at a time; the newest matching jobs are enough
+                page = post_json(f"https://{host}/wday/cxs/{tenant}/{site}/jobs",
+                                 {"limit": 20, "offset": offset, "searchText": word, "appliedFacets": {}})["jobPostings"]
+                out += [{"url": f"https://{host}/{site}{j['externalPath']}", "title": j["title"],
+                         "location": j.get("locationsText", ""), "posted": workday_date(j.get("postedOn"), today)} for j in page]
+                if len(page) < 20:
+                    break
         return out
     except Exception:
         return []
@@ -252,7 +258,7 @@ def pick(jobs, log):
                            for i, j in enumerate(jobs))
     prompt = (f"<profile>\n{profile()}\n</profile>\n\n<postings>\n{postings}\n</postings>\n\n"
               f'Pick up to {PICKS}, best first. Reply with only a JSON array like [{{"i": 3, "why": "one short line: the fit"}}].')
-    text, tokens = tailor.call_claude(prompt, PICK_SYSTEM.format(location=LOCATION, level=LEVEL), effort=EFFORT)
+    text, tokens = tailor.call_claude(prompt, PICK_SYSTEM.format(role=ROLE, not_wanted=NOT_WANTED, location=LOCATION, level=LEVEL), effort=EFFORT)
     try:
         picks = json.loads(text[text.find("["):text.rfind("]") + 1])
     except json.JSONDecodeError:
