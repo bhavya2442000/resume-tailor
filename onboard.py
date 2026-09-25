@@ -4,6 +4,7 @@
 1. build_bank: resume files (PDF, DOCX, TXT) -> a first master.json.
 2. suggest: GitHub, website links, a LinkedIn PDF or pasted notes -> proposed additions, each with its source.
 3. add: write the additions the user ticked into master.json.
+4. plan_search: the job titles they want + what they want in their own words -> proposed search settings (search.json).
 
 Every number in the bank or in a suggestion must appear in the source text; anything else is dropped.
 
@@ -21,6 +22,7 @@ from pathlib import Path
 
 import pdfplumber
 
+import finder
 import tailor
 
 HERE = Path(__file__).parent
@@ -71,6 +73,26 @@ SUGGEST_REPLY = """Reply with only a JSON array, no prose or code fence. Each it
 {"kind": "project", "title": "", "tools": "", "bullets": ["..."], "source": "where it came from", "evidence": "exact quote"}
 {"kind": "bullet", "job": 0, "text": "...", "source": "...", "evidence": "..."}
 {"kind": "skill", "label": "Group label", "items": "item, item", "source": "...", "evidence": "..."}"""
+
+
+PLAN_SYSTEM = """You set up a daily job search for one candidate. You get their resume profile, the job titles they want, and what they want in their own words. You may also get their current settings: then treat their words as changes to those settings and keep the rest.
+
+The search runs your queries as web searches on Greenhouse, Lever and Workday to find companies, lists each company's open jobs, drops jobs with free word rules, then an AI picks the best fits.
+
+Settings:
+- queries: 4-8 web searches, each a job title plus a place, e.g. "data analyst Chicago", "data analyst remote United States". Cover each wanted title and each place.
+- role: the kind of work they want, one plain line.
+- not_wanted: nearby fields or kinds of job to leave out, comma-separated, or "".
+- title_words: 1-6 lowercase word starts a job title must contain; a title matches when one of its words starts with one, so "engineer" also matches Engineering. Broad enough not to miss good jobs, e.g. ["analyst"], ["engineer", "developer"], ["nurse", "rn"].
+- too_senior: lowercase title words that mark a job above their level, e.g. ["senior", "sr", "lead", "principal", "staff", "director", "head", "vp", "chief"]. Include "manager" unless they want manager roles. Never list a word that is in title_words.
+- location: where they can work, in plain words.
+- places: words a posting's location must contain to be kept: cities, nearby suburbs, state codes and names, "Remote". Add "United States" and "US" only if they will work anywhere in the US or remote in the US. [] if anywhere at all is fine.
+- level: their level in plain words, from their experience and what they said.
+- max_years: the most "N+ years of experience" a posting may ask for (a whole number, usually their years of experience plus 1-2).
+- max_age_days: drop postings older than this; 14 unless they say otherwise.
+- explain: one or two sentences to the candidate: what you set and why, and anything they should check.
+
+Their own words win over what the resume suggests. Don't invent preferences; where they say nothing, choose from the resume. Reply with only a JSON object with exactly these keys, no prose or code fence."""
 
 
 # ---------- reading sources ----------
@@ -294,6 +316,28 @@ def add(suggestions):
     save_bank(b)
     return stats(b)
 
+
+def plan_search(titles, about, current=None):
+    """Job titles + what the user wants in their words (+ current settings) -> (proposed settings, explain, tokens).
+    Nothing is saved; the page shows the proposal to edit first."""
+    titles = [t.strip() for t in titles if t.strip()]
+    if not titles and not about.strip():
+        raise ValueError("Add the job titles you want, or tell Claude what you're looking for.")
+    profile = finder.profile() if BANK.exists() else "No bullet bank yet."
+    keep = {k: v for k, v in (current or {}).items() if k not in ("titles", "about")}
+    prompt = (f"<profile>\n{profile}\n</profile>\n\n"
+              + (f"<current_settings>\n{json.dumps(keep, ensure_ascii=False)}\n</current_settings>\n\n" if keep else "")
+              + f"<job_titles>\n{chr(10).join(titles) or '(none given)'}\n</job_titles>\n\n"
+              + f"<in_their_words>\n{about.strip() or '(nothing)'}\n</in_their_words>")
+    reply, tokens = tailor.call_claude(prompt, PLAN_SYSTEM, effort="low")
+    try:
+        s = json.loads(reply[reply.find("{"):reply.rfind("}") + 1])
+    except json.JSONDecodeError:
+        raise RuntimeError("Claude's search settings weren't valid JSON; try again.")
+    explain = str(s.pop("explain", ""))
+    s["queries"] = s.get("queries", [])[:finder.MAX_QUERIES]
+    s["too_senior"] = [w for w in s.get("too_senior", []) if w not in s.get("title_words", [])]
+    return finder.clean_settings({**s, "titles": titles, "about": about.strip()}), explain, tokens
 
 def save_upload(name, data):
     """Store an uploaded file under uploads/ and return its path."""

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Job Search</title>
+<link rel="stylesheet" href="/style.css">
+<style>
+.steps { display: grid; gap: 20px; }
+.step-h { display: flex; gap: 14px; align-items: flex-start; padding: 18px 18px 0; }
+.num { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--sans);
+  background: var(--accent-soft); color: var(--accent); }
+.num.done { background: var(--ok); color: var(--surface); }
+.step-h h2 { font-size: 17px; margin-top: 3px; }
+.step-h .hint { margin-top: 4px; font-size: 14px; }
+.step-b { padding: 16px 18px 18px 60px; display: grid; gap: 14px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
+.grid2 .wide { grid-column: 1 / -1; }
+#about { min-height: 150px; }
+#queries { min-height: 150px; font: 13px/1.5 var(--mono); }
+input[type=number] { width: 100%; font: 14px/1.5 var(--sans); color: var(--ink); background: var(--raised);
+  border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; }
+input[type=number]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.field .hint { font-weight: 400; }
+.explain { font-size: 14px; color: var(--ink-2); padding: 10px 12px; background: var(--accent-soft); border-radius: 8px; }
+.explain::before { content: "Claude · "; font-weight: 600; color: var(--accent); }
+.draft { font-size: 13px; background: var(--warn-soft); color: var(--warn); padding: 8px 10px; border-radius: 8px; }
+.how { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.how b { color: var(--ink); }
+.status { display: grid; gap: 10px; font-size: 14px; }
+@media (max-width: 640px) {
+  .step-b { padding-left: 18px; }
+  .grid2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<nav class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="/"><span class="mark">R</span><span>Resume Tailor</span></a>
+    <div class="tabs">
+      <a href="/">Jobs</a>
+      <a href="/bank">Bullet bank</a>
+      <a href="/search" aria-current="page">Search</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="hero">
+    <div>
+      <h1>Your job search</h1>
+      <p>Tell Claude what jobs you want, in your own words. It reads that along with your bullet bank and sets up the daily search. You can check and change every setting before you save.</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="steps">
+      <section class="card" id="step1">
+        <div class="step-h"><span class="num" id="n1">1</span>
+          <div><h2>What you're looking for</h2>
+            <p class="hint">Say it however you like: where you can work, remote or not, your level, industries you want or want to avoid, anything that matters to you.</p></div>
+        </div>
+        <div class="step-b">
+          <div class="field"><label for="titles">Job titles you want, one per line</label>
+            <textarea id="titles" placeholder="Data analyst&#10;Business intelligence analyst&#10;Financial analyst"></textarea></div>
+          <div class="field"><label for="about">In your own words</label>
+            <textarea id="about" placeholder="I'm finishing my master's in May and have one year of analyst experience. I'd like to stay in Chicago, or work remotely anywhere in the US. I'm most interested in fintech and healthcare. Please skip sales-type roles and anything that needs a security clearance."></textarea></div>
+          <p class="hint" id="change-hint" hidden>To change your search later, just say what's different here, like "add Boston" or "no more insurance companies", and click the button again.</p>
+          <div class="bar"><button class="primary" id="plan" type="button">Set up my search</button></div>
+          <p class="msg" id="plan-msg"></p>
+        </div>
+      </section>
+
+      <section class="card" id="step2" hidden>
+        <div class="step-h"><span class="num" id="n2">2</span>
+          <div><h2>Check your search</h2>
+            <p class="hint">These settings decide which jobs you see. Change anything that isn't right, then save.</p></div>
+        </div>
+        <div class="step-b">
+          <p class="explain" id="explain" hidden></p>
+          <p class="draft" id="draft" hidden>Claude's suggestion. Not saved yet.</p>
+          <div class="grid2">
+            <div class="field wide"><label for="queries">Web searches, one per line <span class="hint">A job title plus a place. Each one runs on Greenhouse, Lever and Workday to find companies.</span></label>
+              <textarea id="queries" spellcheck="false"></textarea></div>
+            <div class="field wide"><label for="role">The kind of work you want</label>
+              <input type="text" id="role"></div>
+            <div class="field wide"><label for="not_wanted">Leave out <span class="hint">Nearby fields or kinds of job</span></label>
+              <input type="text" id="not_wanted"></div>
+            <div class="field"><label for="title_words">Titles must include <span class="hint">Word starts, comma-separated. Empty keeps every title.</span></label>
+              <input type="text" id="title_words"></div>
+            <div class="field"><label for="too_senior">Too senior <span class="hint">Titles with these words are skipped</span></label>
+              <input type="text" id="too_senior"></div>
+            <div class="field wide"><label for="location">Where you can work</label>
+              <input type="text" id="location"></div>
+            <div class="field wide"><label for="places">Keep jobs located in <span class="hint">Cities, states, "Remote", comma-separated. Empty keeps every location.</span></label>
+              <input type="text" id="places"></div>
+            <div class="field wide"><label for="level">Your level</label>
+              <input type="text" id="level"></div>
+            <div class="field"><label for="max_years">Most years of experience a job can ask for</label>
+              <input type="number" id="max_years" min="0" max="30"></div>
+            <div class="field"><label for="max_age_days">Skip jobs posted more than this many days ago</label>
+              <input type="number" id="max_age_days" min="1" max="60"></div>
+          </div>
+          <div class="bar"><button class="primary" id="save" type="button">Save search</button></div>
+          <p class="msg" id="save-msg"></p>
+        </div>
+      </section>
+    </div>
+
+    <aside class="side">
+      <section class="card" aria-live="polite">
+        <div class="card-h"><h2>Status</h2></div>
+        <div class="card-b status" id="status">Loading…</div>
+      </section>
+      <section class="card">
+        <div class="card-h"><h2>How a search runs</h2></div>
+        <div class="card-b">
+          <ol class="how">
+            <li><b>Web search.</b> Your searches run on Greenhouse, Lever and Workday to find companies that are hiring.</li>
+            <li><b>Open jobs.</b> Each company's current openings come from its job site, which costs no tokens.</li>
+            <li><b>Free filters.</b> Jobs are dropped for the wrong title, too senior, too old, the wrong place, or asking for too many years.</li>
+            <li><b>Claude picks.</b> Claude reads the rest with your bank and your own words, and picks the best fits with a reason for each.</li>
+          </ol>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const LISTS = ["title_words", "too_senior", "places"];   // comma-separated inputs
+const TEXTS = ["role", "not_wanted", "location", "level"];
+let saved = null;
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function msg(id, text, kind = "") {
+  $(id).replaceChildren(...(kind === "busy" ? [el("span", "spin")] : []), text);
+  $(id).className = "msg " + kind;
+}
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : { method: "POST", body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Something went wrong.");
+  return data;
+}
+
+const lines = (text) => text.split("\n").map((l) => l.trim()).filter(Boolean);
+const commas = (text) => text.split(",").map((w) => w.trim()).filter(Boolean);
+
+function fill(s) {
+  $("queries").value = s.queries.join("\n");
+  for (const k of TEXTS) $(k).value = s[k];
+  for (const k of LISTS) $(k).value = s[k].join(", ");
+  $("max_years").value = s.max_years;
+  $("max_age_days").value = s.max_age_days;
+  $("step2").hidden = false;
+}
+
+function read() {
+  const s = { titles: lines($("titles").value), about: $("about").value.trim(), queries: lines($("queries").value) };
+  for (const k of TEXTS) s[k] = $(k).value.trim();
+  for (const k of LISTS) s[k] = commas($(k).value);
+  s.max_years = $("max_years").value;
+  s.max_age_days = $("max_age_days").value;
+  return s;
+}
+
+function showStatus(d, bank) {
+  const box = $("status");
+  const parts = [];
+  if (!bank.bank) {
+    parts.push(el("p", "hint", "No bullet bank yet. Claude sets up a better search when it can see your resume."));
+    const a = el("a", "btn secondary small", "Set up your bank first");
+    a.href = "/bank";
+    parts.push(a);
+  }
+  if (d.problem) parts.push(el("p", "error", d.problem));
+  if (d.ready) {
+    parts.push(el("p", null, `Your search is saved: ${d.settings.queries.length} web searches.`));
+    const a = el("a", "btn primary", "Find jobs");
+    a.href = "/";
+    parts.push(a);
+  } else {
+    parts.push(el("p", "hint", "Not set up yet. Tell Claude what you want in step 1."));
+  }
+  box.replaceChildren(...parts);
+  $("n1").classList.toggle("done", d.ready);
+  $("n1").textContent = d.ready ? "✓" : "1";
+  $("n2").classList.toggle("done", d.ready);
+  $("n2").textContent = d.ready ? "✓" : "2";
+  $("plan").textContent = d.ready ? "Update my search" : "Set up my search";
+  $("change-hint").hidden = !d.ready;
+}
+
+async function load() {
+  const [d, bank] = await Promise.all([api("/api/search"), api("/api/bank")]);
+  saved = d.settings;
+  if (saved) {
+    $("titles").value = saved.titles.join("\n");
+    $("about").value = saved.about;
+    fill(saved);
+  }
+  showStatus(d, bank);
+}
+
+$("plan").addEventListener("click", async () => {
+  $("plan").disabled = true;
+  msg("plan-msg", "Claude is reading your bank and what you wrote. This takes about 20 seconds.", "busy");
+  try {
+    const r = await api("/api/search/plan", { titles: lines($("titles").value), about: $("about").value });
+    fill(r.settings);
+    $("explain").textContent = r.explain;
+    $("explain").hidden = !r.explain;
+    $("draft").hidden = false;
+    msg("plan-msg", `Done. Check the settings below and save. ${(r.tokens[0] / 1000).toFixed(1)}K tokens in / ${(r.tokens[1] / 1000).toFixed(1)}K out.`, "ok");
+    $("step2").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (e) {
+    msg("plan-msg", e.message, "bad");
+  }
+  $("plan").disabled = false;
+});
+
+$("save").addEventListener("click", async () => {
+  try {
+    await api("/api/search", { settings: read() });
+    $("draft").hidden = true;
+    msg("save-msg", "Saved. Your next Find jobs run uses these settings.", "ok");
+    load();
+  } catch (e) {
+    msg("save-msg", e.message, "bad");
+  }
+});
+
+load();
+</script>
+</body>
+</html>

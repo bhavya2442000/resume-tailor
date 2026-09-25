@@ -11,7 +11,7 @@ Finds new jobs each morning in any field you choose, and builds a one-page resum
 1. Install [Claude Code](https://claude.com/claude-code) and sign in, so that `claude -p "hi"` works in a terminal.
 2. Install Google Chrome (it renders the PDFs) and Python 3.9 or later, then run `pip install pdfplumber`.
 3. Run `python3 app.py` (or double-click `Resume Tailor.command` on a Mac). The page opens at http://localhost:8765.
-4. Set up your search in `finder.py` (see [Set up your search](#set-up-your-search)). Find jobs won't run until you fill in `QUERIES` and `ROLE`.
+4. Set up your bullet bank, then your search, on the page (see below). Find jobs won't run until both are set up.
 
 ## Your bullet bank
 
@@ -41,76 +41,28 @@ Your `master.json` is in `.gitignore`, so it isn't committed by accident.
 
 ## Set up your search
 
-All settings are at the top of `finder.py`. These decide what you get:
+Open **Search** (http://localhost:8765/search) after your bank is set up:
+
+1. **Say what you want.**
+   - List the job titles you want.
+   - In your own words, describe the rest: where you can work, remote or not, your level, industries you want or want to avoid.
+   - Claude reads this along with your bank and fills in the search settings. This takes about 20 seconds and 3K tokens.
+2. **Check and save.**
+   - Every setting is shown so you can change it before saving. Nothing is used until you click **Save search**.
+   - To change it later, write what's different (e.g. "add Boston", "no insurance companies") and click **Update my search**. Claude changes only what you mention.
+
+Your own words are also sent to the call that picks jobs, so a preference with no setting of its own, like an industry to avoid, still counts.
 
 | Setting | What it does |
 |---|---|
-| `QUERIES` | Web searches that find companies. Each one runs on Greenhouse, Lever and Workday. Use a job title plus a place: `"<title> <city>"`, `"<title> remote United States"`. 5-8 queries is plenty. |
-| `TITLE_WORDS` | A job title must have a word starting with one of these, e.g. `["engineer", "developer"]` (so `engineer` also matches Engineering). Checked for free, before any tokens. `[]` keeps every title. |
-| `ROLE` | The kind of work you want, in plain words. Claude uses it to pick jobs. |
-| `NOT_WANTED` | Nearby fields to leave out, e.g. `"sales engineer, IT support"`. |
-| `LOCATION` + `LOCATION_KEEP` | Where you can work, in words for Claude, and as a pattern the posting's location must match. |
-| `LEVEL`, `MAX_YEARS`, `TITLE_SKIP` | Your level in words; the most "N+ years" a posting may ask for; titles too senior for you. If you want manager roles, take `manager` out of `TITLE_SKIP`. |
+| Web searches | Find companies. Each one runs on Greenhouse, Lever and Workday. A job title plus a place: `"data analyst Chicago"`, `"data analyst remote United States"`. At most 12. |
+| Kind of work, Leave out | The work you want and nearby fields to skip, in plain words. Claude uses them to pick jobs. |
+| Titles must include | A job title must have a word starting with one of these, e.g. `engineer, developer` (so `engineer` also matches Engineering). Checked for free, before any tokens. Empty keeps every title. |
+| Too senior | Titles with these words are skipped. If you want manager roles, take `manager` out. |
+| Where you can work, Keep jobs located in | Where you can work, in words for Claude, and words a posting's location must contain (cities, states, `Remote`). Empty keeps every location. |
+| Your level, Most years | Your level in words, and the most "N+ years" a posting may ask for. |
 
-Greenhouse and Lever are used mostly by tech companies and startups; Workday by large companies, hospitals, universities and governments. Most fields are covered by at least one.
-
-**Examples**
-
-New-grad software engineer, Seattle or remote:
-
-```python
-QUERIES = [
-    "software engineer new grad Seattle",
-    "junior software engineer Seattle",
-    "backend engineer entry level remote United States",
-    "full stack developer remote United States",
-    "software engineer I Bellevue",
-]
-ROLE = "software engineering: backend, full stack or web development"
-NOT_WANTED = "sales engineer, support engineer, hardware, QA-only roles"
-TITLE_WORDS = ["engineer", "developer"]
-LOCATION = "Seattle area (on-site or hybrid) or remote in the US"
-LOCATION_KEEP = re.compile(r"\b(WA|Washington|Seattle|Bellevue|Redmond|Remote)\b|^(US|USA|United States)$|^$", re.I)
-LEVEL = "new graduate with a CS degree and one internship (entry level)"
-MAX_YEARS = 2
-```
-
-Marketing, New York, early career:
-
-```python
-QUERIES = [
-    "marketing coordinator New York",
-    "marketing associate New York",
-    "content marketing specialist New York",
-    "growth marketing associate remote United States",
-    "social media coordinator New York",
-]
-ROLE = "marketing: content, social media, email, growth or brand marketing"
-NOT_WANTED = "sales, account executive, marketing engineering"
-TITLE_WORDS = ["marketing", "content", "social media", "growth", "brand"]
-LOCATION = "New York City (on-site or hybrid) or remote in the US"
-LOCATION_KEEP = re.compile(r"\b(NY|New York|NYC|Brooklyn|Remote)\b|^(US|USA|United States)$|^$", re.I)
-LEVEL = "1-2 years of marketing experience and a bachelor's degree (entry level)"
-MAX_YEARS = 3
-```
-
-Registered nurse, Chicago (hospitals mostly use Workday):
-
-```python
-QUERIES = [
-    "registered nurse Chicago",
-    "RN medical surgical Chicago",
-    "new graduate nurse residency Chicago",
-    "registered nurse Evanston",
-]
-ROLE = "registered nurse: bedside or clinic nursing"
-NOT_WANTED = "nurse manager, nurse educator, travel nursing agencies"
-TITLE_WORDS = ["nurse", "RN"]
-LOCATION = "Chicago area, on-site"
-LOCATION_KEEP = re.compile(r"\b(IL|Illinois|Chicago|Evanston|Oak Park)\b|^$", re.I)
-LEVEL = "new graduate RN with a BSN and a state license"
-MAX_YEARS = 1
-```
+The settings are saved in `search.json`, which is in `.gitignore`. Greenhouse and Lever are used mostly by tech companies and startups; Workday by large companies, hospitals, universities and governments. Most fields are covered by at least one.
 
 Keep your bullet bank in the same field: Claude picks jobs that fit your bank, and each resume is built only from it.
 
@@ -147,6 +99,7 @@ These figures are from real runs; your numbers will vary.
 | One resume | about 7-8K in / 2-3K out |
 | Bank from a resume | about 3K in / 2K out |
 | Suggestions from links | about 9K in / 6K out (6 GitHub repos) |
+| Search setup from your words | about 3K in / 0.5K out (estimate) |
 
 The calls turn off memory, skills and MCP servers (`--setting-sources "" --strict-mcp-config --disable-slash-commands`), which saves about 6K tokens per call.
 
@@ -155,9 +108,10 @@ The calls turn off memory, skills and MCP servers (`--setting-sources "" --stric
 | File | What it does |
 |---|---|
 | `master.json` | Your bullet bank. It's the only source of facts. Not committed. |
-| `onboard.py` + `bank.html` | Builds the bank from your resume, suggests additions from GitHub, links and notes, and edits it. |
+| `onboard.py` + `bank.html` | Builds the bank from your resume, suggests additions from GitHub, links and notes, and edits it. Also turns what you want into search settings. |
 | `example/master.json` | A made-up example bank (Alex Rivera). |
-| `finder.py` | Finds jobs and picks the ones that fit. Settings are at the top. |
+| `search.json` + `search.html` | Your search settings, and the page where Claude sets them up from your own words. Not committed. |
+| `finder.py` | Finds jobs and picks the ones that fit. |
 | `tailor.py` | Fetches a posting, asks Claude for a draft, checks it against the bank, builds the PDF. |
 | `build.py` | Renders the resume to a one-page PDF with headless Chrome, tightening spacing until it fits. |
 | `app.py` + `ui.html` + `style.css` | The local web page. |

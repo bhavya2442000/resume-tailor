@@ -2,14 +2,15 @@
 """Find jobs for the morning review list.
 
 Run: python3 finder.py   (or the Find jobs button on the app page)
+Your search (titles, places, level) is in search.json, set up on the Search page (/search).
 
-1. One `claude -p` call with web search runs QUERIES on Greenhouse, Lever and Workday.
+1. One `claude -p` call with web search runs your searches on Greenhouse, Lever and Workday.
    Search results are mostly old, closed postings, so they're used to find companies,
    the way you'd click through to a company's careers page.
 2. Each company's open jobs come from its job site's public API (no tokens).
 3. Free rules drop wrong or senior titles, old posts, far-away locations, clearance jobs,
    too many years required, and jobs shown on any earlier list.
-4. One `claude -p` call picks up to PICKS jobs that fit the bank best, with a reason each.
+4. One `claude -p` call picks up to PICKS jobs that fit your bank and what you asked for, with a reason each.
 
 The list goes to jobs/<date>.json; the app page shows it one job at a time for review.
 """
@@ -26,39 +27,41 @@ import tailor
 JOBS = tailor.HERE / "jobs"
 COMPANIES = JOBS / "companies.json"
 
-# ---- Settings: edit freely. The README has examples for other fields. ----
+# ---- How the search runs ----
 SITES = {
     "Greenhouse": ["job-boards.greenhouse.io", "boards.greenhouse.io"],
     "Lever": ["jobs.lever.co"],
     "Workday": ["myworkdayjobs.com"],
 }
-# Fill in these for the jobs you want. The README has full examples (software, marketing, nursing).
-QUERIES = [  # web searches that find companies, each run on every site; a job title plus a place
-    # "software engineer Seattle",
-    # "software engineer remote United States",
-]
-ROLE = ""        # the kind of work you want, in plain words, e.g. "backend or full stack software engineering"
-NOT_WANTED = ""  # nearby fields to leave out, e.g. "sales engineer, IT support"
-TITLE_WORDS = [] # a title must have a word starting with one of these, e.g. ["engineer", "developer"]; [] keeps every title
+# Your own search (titles, places, level...) lives in search.json, set on the Search page (/search).
+SETTINGS = tailor.HERE / "search.json"
+DEFAULTS = {
+    "titles": [],       # the job titles you want, in your words
+    "about": "",        # what you want, in your words; the picking call reads it too
+    "queries": [],      # web searches that find companies, each run on every site; a job title plus a place
+    "role": "",         # the kind of work you want, in plain words
+    "not_wanted": "",   # nearby fields to leave out
+    "title_words": [],  # a title must have a word starting with one of these; [] keeps every title
+    "too_senior": ["senior", "sr", "lead", "principal", "staff", "manager", "director", "head", "vp",
+                   "vice president", "chief", "architect"],  # title words above your level
+    "location": "anywhere in the US, on-site, hybrid or remote",
+    "places": [],       # a posting's location must contain one of these words; [] keeps every location
+    "level": "entry to mid level",
+    "max_years": 3,     # drop postings whose lowest "N+ years of experience" is above this
+    "max_age_days": 14, # drop postings older than this
+}
+LISTS = ("titles", "queries", "title_words", "too_senior", "places")
+MAX_QUERIES = 12    # each query runs on 3 sites, so this caps the search call at 36 searches
 REMEMBER_COMPANIES = True  # also check every company found on earlier days (free: no tokens)
-LOCATION = "anywhere in the US, on-site, hybrid or remote"
-LEVEL = "entry to mid level"
-MAX_AGE_DAYS = 14   # drop postings older than this
-MAX_YEARS = 3       # drop postings whose lowest "N+ years of experience" is above this
 MAX_READ = 80       # newest postings read in full and sent to the picking call
 MAX_PER_COMPANY = 4 # so one big company can't fill the list
 SKIP_COMPANIES = {"jobgether"}  # job-board sites that repost other companies' jobs
 PICKS = 20
 EFFORT = "medium"   # for the picking call; the search call always runs at low
 
-# Titles dropped for being too senior. Remove "manager" etc. if that is the level you want.
-TITLE_SKIP = re.compile(r"\b(senior|sr|lead|principal|staff|manager|director|head|vp|vice president|chief|architect)\b", re.I)
-# Posting locations kept; an empty location is kept too. Match this to LOCATION above.
-LOCATION_KEEP = re.compile(r"", re.I)  # keeps every location; e.g. r"\b(WA|Seattle|Remote)\b|^$" for Seattle or remote
 TEXT_SKIP = re.compile(r"security clearance|active (secret|top secret|ts)\b|ts/sci", re.I)
 YEARS = re.compile(r"(\d{1,2})\s*(?:\+|plus)?\s*(?:(?:-|–|to)\s*\d{1,2}\s*\+?\s*)?years?\b[^.\n]{0,40}?experience", re.I)
 # ---------------------------------
-TITLE_MUST = re.compile(r"\b(?:" + "|".join(map(re.escape, TITLE_WORDS)) + ")" if TITLE_WORDS else ".", re.I)
 
 SEARCH_SYSTEM = "You find job posting links with web search. Reply with job posting URLs only, one per line, no other text."
 PICK_SYSTEM = """You screen job postings for one candidate, the way they would screen them themselves; they review your picks before applying.
@@ -66,9 +69,68 @@ You get the candidate's profile and a numbered list of postings. Pick every post
 - The kind of work they want: {role}, using their skills.
 - Experience level they can get hired at: {level}.
 - Location fits: {location}.
-Leave out only clear mismatches: another field{not_wanted}, a student-only program, or a location that doesn't fit."""
+Leave out only clear mismatches: another field{not_wanted}, a student-only program, or a location that doesn't fit.
+If they describe what they want in their own words, follow that too."""
 
 lock = threading.Lock()  # the app reviews and the finder writes the same day file
+
+
+# ---------- your search settings ----------
+
+def clean_settings(s):
+    """Settings from the page or from Claude -> a full, valid settings dict. Raises ValueError on bad values."""
+    out = {}
+    for key, default in DEFAULTS.items():
+        v = s.get(key, default)
+        if key in LISTS:
+            if isinstance(v, str):
+                v = v.splitlines()
+            if not isinstance(v, list):
+                raise ValueError(f'"{key}" should be a list.')
+            v = [" ".join(str(x).split()) for x in v]
+            v = list(dict.fromkeys(x.lower() if key in ("title_words", "too_senior") else x for x in v if x))
+        elif isinstance(default, int):
+            try:
+                v = max(0 if key == "max_years" else 1, min(int(v), 30 if key == "max_years" else 60))
+            except (TypeError, ValueError):
+                raise ValueError(f'"{key}" should be a whole number.')
+        else:
+            v = str(v or "").strip()
+        out[key] = v
+    if len(out["queries"]) > MAX_QUERIES:
+        raise ValueError(f"Use at most {MAX_QUERIES} searches; each one runs on 3 job sites.")
+    return out
+
+
+def load_settings():
+    """Your saved search, or None before it's set up."""
+    return clean_settings(json.loads(SETTINGS.read_text())) if SETTINGS.exists() else None
+
+
+def save_settings(s):
+    s = clean_settings(s)
+    SETTINGS.write_text(json.dumps(s, indent=2, ensure_ascii=False) + "\n")
+    return s
+
+
+def ready(s):
+    return bool(s and s["queries"] and s["role"])
+
+
+def alternation(words):
+    return "|".join(map(re.escape, sorted(words, key=len, reverse=True)))
+
+
+def rules(s):
+    """The free filters, compiled from the settings."""
+    return {
+        # a title word must start with one of title_words ("engineer" also matches Engineering)
+        "title_must": re.compile(rf"\b(?:{alternation(s['title_words'])})" if s["title_words"] else ".", re.I),
+        "title_skip": re.compile(rf"\b(?:{alternation(s['too_senior'])})\b" if s["too_senior"] else "(?!)", re.I),
+        # an empty location is kept, since many postings leave it blank
+        "location_keep": re.compile(rf"\b(?:{alternation(s['places'])})\b|^\s*$" if s["places"] else "", re.I),
+        "max_age_days": s["max_age_days"],
+    }
 
 
 def job_key(url):
@@ -121,9 +183,9 @@ def seen_keys():
     return keys
 
 
-def search(log):
+def search(queries, log):
     """Web search for posting links. Returns (links, tokens)."""
-    lines = [f'- query "{q}" with allowed_domains {json.dumps(domains)}' for q in QUERIES for domains in SITES.values()]
+    lines = [f'- query "{q}" with allowed_domains {json.dumps(domains)}' for q in queries for domains in SITES.values()]
     prompt = ("Run every one of these web searches, all at once in a single turn:\n" + "\n".join(lines)
               + "\n\nThen list job posting URLs from the results, one per line: one URL per company is enough.")
     log(f"Searching the web ({len(lines)} searches)")
@@ -167,7 +229,7 @@ def workday_date(posted_on, today):
     return time.strftime("%Y-%m-%d", time.localtime(time.mktime(time.strptime(today, "%Y-%m-%d")) - days * 86400))
 
 
-def open_jobs(board, today):
+def open_jobs(board, today, title_words):
     """A company's open postings: [{key, url, title, location, posted}]. Any failure -> []."""
     try:
         if board[0] == "greenhouse":
@@ -183,7 +245,7 @@ def open_jobs(board, today):
                     for j in tailor.get_json(f"https://api.{eu}lever.co/v0/postings/{co}?mode=json")]
         _, host, tenant, site = board
         out = []
-        for word in TITLE_WORDS or [""]:
+        for word in title_words or [""]:
             for offset in (0, 20, 40):  # Workday pages 20 at a time; the newest matching jobs are enough
                 page = post_json(f"https://{host}/wday/cxs/{tenant}/{site}/jobs",
                                  {"limit": 20, "offset": offset, "searchText": word, "appliedFacets": {}})["jobPostings"]
@@ -196,13 +258,13 @@ def open_jobs(board, today):
         return []
 
 
-def quick_rule(job, today):
+def quick_rule(job, today, r):
     """Rules that need only the job list: title, age, location. Returns the reason to drop, or None."""
-    if not TITLE_MUST.search(job["title"]) or TITLE_SKIP.search(job["title"]):
+    if not r["title_must"].search(job["title"]) or r["title_skip"].search(job["title"]):
         return "title"
-    if job["posted"] and days_ago(job["posted"], today) > MAX_AGE_DAYS:
-        return f"older than {MAX_AGE_DAYS} days"
-    if not LOCATION_KEEP.search(job["location"]):
+    if job["posted"] and days_ago(job["posted"], today) > r["max_age_days"]:
+        return f"older than {r['max_age_days']} days"
+    if not r["location_keep"].search(job["location"]):
         return "location"
     return None
 
@@ -213,7 +275,7 @@ def years_required(text):
     return min(found) if found else None
 
 
-def check(job):
+def check(job, max_years):
     """Read one posting in full; return (job, None) if it passes the rules, or (None, reason)."""
     try:
         p = tailor.fetch_posting(job["url"])
@@ -222,7 +284,7 @@ def check(job):
     if TEXT_SKIP.search(p["text"]):
         return None, "clearance"
     years = years_required(p["text"])
-    if years and years > MAX_YEARS:
+    if years and years > max_years:
         return None, f"{years}+ years"
     trimmed = tailor.trim_jd(p["text"])
     return dict(job, site=site_of(job["key"]), company=p["company"], title=p["title"], location=p["location"] or job["location"],
@@ -248,14 +310,18 @@ def profile():
     }, ensure_ascii=False)
 
 
-def pick(jobs, log):
+def pick(jobs, s, log):
     """Ask the model for the best PICKS. Returns ([(index, why)], tokens)."""
     log(f"Claude is picking from {len(jobs)} postings")
     postings = "\n\n".join(f'[{i}] {j["title"]} | {j["company"]} | {j["location"]} | posted {j["posted"] or "unknown"}\n{j["brief"]}'
                            for i, j in enumerate(jobs))
-    prompt = (f"<profile>\n{profile()}\n</profile>\n\n<postings>\n{postings}\n</postings>\n\n"
+    wants = "\n".join(filter(None, ["Job titles they want: " + ", ".join(s["titles"]) if s["titles"] else "", s["about"]]))
+    prompt = (f"<profile>\n{profile()}\n</profile>\n\n"
+              + (f"<what_they_want>\n{wants}\n</what_they_want>\n\n" if wants else "")
+              + f"<postings>\n{postings}\n</postings>\n\n"
               f'Pick up to {PICKS}, best first. Reply with only a JSON array like [{{"i": 3, "why": "one short line: the fit"}}].')
-    text, tokens = tailor.call_claude(prompt, PICK_SYSTEM.format(role=ROLE, not_wanted=f" ({NOT_WANTED})" if NOT_WANTED else "", location=LOCATION, level=LEVEL), effort=EFFORT)
+    text, tokens = tailor.call_claude(prompt, PICK_SYSTEM.format(role=s["role"], not_wanted=f" ({s['not_wanted']})" if s["not_wanted"] else "",
+                                                           location=s["location"], level=s["level"]), effort=EFFORT)
     try:
         picks = json.loads(text[text.find("["):text.rfind("]") + 1])
     except json.JSONDecodeError:
@@ -268,9 +334,11 @@ def find(log=print):
     JOBS.mkdir(exist_ok=True)
     today = time.strftime("%Y-%m-%d")
     run = {"at": time.strftime("%H:%M")}
-    if not QUERIES or not ROLE:
-        raise ValueError("Set up your search first: fill in QUERIES and ROLE at the top of finder.py (the README has examples).")
-    links, run["search_tokens"] = search(log)
+    s = load_settings()
+    if not ready(s):
+        raise ValueError("Set up your search first: open the Search page (http://localhost:8765/search).")
+    r = rules(s)
+    links, run["search_tokens"] = search(s["queries"], log)
     companies = boards(links)
     found_today = len(companies)
     if REMEMBER_COMPANIES:
@@ -279,7 +347,7 @@ def find(log=print):
         COMPANIES.write_text(json.dumps(companies, indent=1))
     log(f"Search gave {len(links)} links from {found_today} companies; listing open jobs at {len(companies)} companies")
     with ThreadPoolExecutor(max_workers=8) as ex:
-        listed = [j for jobs in ex.map(lambda b: open_jobs(b, today), companies) for j in jobs]
+        listed = [j for jobs in ex.map(lambda b: open_jobs(b, today, s["title_words"]), companies) for j in jobs]
 
     seen, reasons, candidates = seen_keys(), {}, {}
     drop = lambda why: reasons.__setitem__(why, reasons.get(why, 0) + 1)
@@ -287,7 +355,7 @@ def find(log=print):
         j["key"] = job_key(j["url"])
         if not j["key"] or j["key"] in candidates:
             continue
-        why = "shown before" if j["key"] in seen else quick_rule(j, today)
+        why = "shown before" if j["key"] in seen else quick_rule(j, today, r)
         if why:
             drop(why)
         else:
@@ -307,7 +375,7 @@ def find(log=print):
     newest = newest[:MAX_READ]
     log(f"{len(listed)} open jobs listed; reading the newest {len(newest)} in full")
     with ThreadPoolExecutor(max_workers=8) as ex:
-        results = list(ex.map(check, newest))
+        results = list(ex.map(lambda j: check(j, s["max_years"]), newest))
     kept = [j for j, _ in results if j]
     for _, why in results:
         if why:
@@ -315,7 +383,7 @@ def find(log=print):
     run.update(links=len(links), companies=len(companies), listed=len(listed), kept=len(kept), dropped=reasons)
     log(f"{len(kept)} passed the rules; dropped: " + ", ".join(f"{n} {r}" for r, n in sorted(reasons.items(), key=lambda x: -x[1])))
 
-    picked, run["pick_tokens"] = pick(kept, log) if kept else ([], [0, 0])
+    picked, run["pick_tokens"] = pick(kept, s, log) if kept else ([], [0, 0])
     run["picked"] = len(picked)
     chosen = {i for i, _ in picked}
     with lock:
@@ -338,5 +406,5 @@ def find(log=print):
 if __name__ == "__main__":
     try:
         find()
-    except (RuntimeError, OSError) as e:
+    except (RuntimeError, OSError, ValueError) as e:
         sys.exit(str(e))
