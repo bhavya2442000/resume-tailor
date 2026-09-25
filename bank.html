@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Bullet Bank</title>
+<style>
+:root {
+  --ground: #f4f5f7; --surface: #ffffff; --ink: #16191f; --muted: #5e6573; --line: #dde1e7;
+  --accent: #1f4fd1; --accent-soft: #e6ecfb; --ok: #1e7b4c; --ok-soft: #e3f3ea;
+  --warn: #9a5c00; --warn-soft: #fbf0dc; --bad: #b3261e; --bad-soft: #fbe6e4;
+  --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #111317; --surface: #1a1d23; --ink: #e9ebef; --muted: #9aa2af; --line: #2c313a;
+    --accent: #8aa8ff; --accent-soft: #1e2744; --ok: #6fcf97; --ok-soft: #16301f;
+    --warn: #f0b95c; --warn-soft: #33260f; --bad: #ff8a80; --bad-soft: #3a1a18;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #111317; --surface: #1a1d23; --ink: #e9ebef; --muted: #9aa2af; --line: #2c313a;
+  --accent: #8aa8ff; --accent-soft: #1e2744; --ok: #6fcf97; --ok-soft: #16301f;
+  --warn: #f0b95c; --warn-soft: #33260f; --bad: #ff8a80; --bad-soft: #3a1a18;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--ground); color: var(--ink); font: 15px/1.5 var(--sans); padding: 40px 16px 64px; }
+main { max-width: 780px; margin: 0 auto; display: grid; gap: 24px; }
+main > * { min-width: 0; }
+a { color: var(--accent); }
+h1 { font: 600 30px/1.15 var(--serif); margin: 6px 0 0; letter-spacing: -0.01em; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+.back { font-size: 13px; text-decoration: none; }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
+h2 { font: 600 17px/1.3 var(--serif); margin: 0; }
+h2 .step { font: 600 12px var(--sans); color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 9px; margin-right: 8px; vertical-align: 2px; }
+h3 { font: 600 12px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 10px 0 0; }
+p { margin: 0; }
+.hint { color: var(--muted); font-size: 13px; }
+label { font-weight: 600; font-size: 13px; display: grid; gap: 4px; }
+input[type=text], textarea { width: 100%; font: 14px/1.5 var(--sans); color: var(--ink); background: var(--ground);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+textarea { min-height: 70px; resize: vertical; }
+textarea.json { min-height: 320px; font: 13px/1.5 var(--mono); }
+input[type=file] { font: 13px var(--sans); color: var(--muted); }
+input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible, [contenteditable]:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+button { font: 600 14px var(--sans); border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid transparent; }
+.primary { background: var(--accent); color: var(--surface); }
+.primary:disabled { opacity: 0.45; cursor: default; }
+.quiet { background: none; color: var(--muted); border-color: var(--line); padding: 6px 12px; font-size: 13px; }
+.x { background: none; border: 0; color: var(--muted); padding: 0 6px; font-size: 16px; line-height: 1; }
+.x:hover { color: var(--bad); }
+.msg { font-size: 13px; margin: 0; }
+.msg.busy { color: var(--accent); }
+.msg.bad { color: var(--bad); }
+.msg.ok { color: var(--ok); }
+.stats { font-size: 14px; }
+.stats b { font-variant-numeric: tabular-nums; }
+.tips { margin: 0; padding: 10px 12px 10px 28px; background: var(--warn-soft); color: var(--warn); border-radius: 8px; font-size: 13px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+ul.sugg, ul.items { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+ul.sugg > li { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+ul.sugg input { margin-top: 5px; }
+.chip { font: 600 11px var(--sans); letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
+  background: var(--accent-soft); color: var(--accent); margin-right: 6px; }
+.sugg .title { font-weight: 600; }
+.sugg ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; }
+.from { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.from q { font-style: italic; }
+.block { border-bottom: 1px solid var(--line); padding: 10px 0; }
+.block:last-child { border-bottom: 0; }
+.head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; }
+.head .t { font: 600 16px/1.3 var(--serif); }
+.head .sub { color: var(--muted); font-size: 13px; }
+.toggle { font-weight: 400; font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+ul.items > li, .bullets > li { display: flex; gap: 6px; align-items: flex-start; padding: 4px 0; }
+ul.items > li { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.bullets { list-style: none; margin: 6px 0 0; padding: 0; }
+.bullets > li::before { content: "•"; color: var(--muted); }
+[contenteditable] { flex: 1; min-width: 0; border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+[contenteditable]:hover { background: var(--ground); }
+.skill b { white-space: nowrap; }
+.add { background: none; border: 0; color: var(--accent); font-size: 13px; padding: 4px 0; }
+.archived { opacity: 0.5; }
+.save { position: sticky; bottom: 12px; justify-self: end; box-shadow: 0 4px 16px #0003; }
+details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+@media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a class="back" href="/">← Resume Tailor</a>
+    <h1>Your bullet bank</h1>
+    <p>Everything a resume can say about you lives in one file, <code>master.json</code>. Each tailored resume picks from it and never adds facts, so the more true detail it holds, the better each resume fits.</p>
+  </header>
+
+  <section aria-live="polite">
+    <p class="stats" id="stats">Loading…</p>
+    <ul class="tips" id="tips" hidden></ul>
+  </section>
+
+  <section>
+    <h2><span class="step">1</span>Start from your resume</h2>
+    <p class="hint">Upload your resume as a PDF, DOCX or TXT. Upload several versions at once to merge them. Your LinkedIn PDF helps too: on your profile, click <b>More → Save to PDF</b>.</p>
+    <input type="file" id="resumes" multiple accept=".pdf,.docx,.txt,.md">
+    <div class="bar">
+      <button class="primary" id="build" type="button" disabled>Build my bank</button>
+      <button class="quiet" id="example" type="button" hidden>Try the example (Alex Rivera)</button>
+    </div>
+    <p class="hint" id="replace" hidden>This replaces your current bank. The old one is kept as <code>master.backup.json</code>.</p>
+    <p class="msg" id="build-msg"></p>
+  </section>
+
+  <section>
+    <h2><span class="step">2</span>Add more from your links</h2>
+    <p class="hint">Claude reads these and suggests projects, bullets and skills your bank is missing. Each suggestion shows the line it came from. Nothing is added until you tick it.</p>
+    <div class="grid2">
+      <label>GitHub username or repo link <input type="text" id="github" placeholder="octocat or github.com/you/project"></label>
+      <label>Files: LinkedIn PDF, project write-ups <input type="file" id="files" multiple accept=".pdf,.docx,.txt,.md"></label>
+    </div>
+    <label>Website, portfolio or blog links, one per line
+      <textarea id="links" placeholder="https://yourname.com&#10;https://yourname.com/projects/churn-model"></textarea></label>
+    <label>Notes: anything else you've done (a project, a result, a tool you used)
+      <textarea id="notes" placeholder="At my internship I also rebuilt the weekly sales report in Power BI; it cut prep time from a day to an hour."></textarea></label>
+    <div class="bar"><button class="primary" id="suggest" type="button">Find content</button></div>
+    <p class="msg" id="suggest-msg"></p>
+    <ul class="sugg" id="sugg" hidden></ul>
+    <div class="bar" id="add-bar" hidden><button class="primary" id="add" type="button">Add to bank</button></div>
+  </section>
+
+  <section id="review" hidden>
+    <h2><span class="step">3</span>Review and edit</h2>
+    <p class="hint">Click any text to edit it, then save. Keep only what's true, and add a number wherever you have a real one. Mark <b>required</b> the jobs every resume must show. <b>Archive</b> projects you want to keep but not use.</p>
+    <div id="editor"></div>
+    <details>
+      <summary>Edit the raw JSON (name, contact, education)</summary>
+      <textarea class="json" id="raw" spellcheck="false"></textarea>
+      <div class="bar"><button class="quiet" id="save-raw" type="button">Save JSON</button></div>
+    </details>
+    <p class="msg" id="save-msg"></p>
+    <button class="primary save" id="save" type="button" hidden>Save changes</button>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let bank = null;
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function msg(id, text, kind = "") {
+  $(id).textContent = text;
+  $(id).className = "msg " + kind;
+}
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : { method: "POST", body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Something went wrong.");
+  return data;
+}
+
+async function readFiles(input) {
+  return Promise.all([...input.files].map((f) => new Promise((ok, fail) => {
+    const r = new FileReader();
+    r.onload = () => ok({ name: f.name, data: r.result.split(",")[1] });
+    r.onerror = fail;
+    r.readAsDataURL(f);
+  })));
+}
+
+// ---------- status ----------
+
+function showStatus(d) {
+  const s = d.stats;
+  $("example").hidden = !!d.bank;
+  $("replace").hidden = !d.bank;
+  $("review").hidden = !d.bank;
+  if (!d.bank) {
+    $("stats").textContent = "No bank yet. Upload your resume below, or try the example first.";
+  } else {
+    $("stats").innerHTML = (d.example ? "<b>Example bank (Alex Rivera, a made-up person).</b> Build your own below. " : "")
+      + `<b>${s.jobs}</b> jobs · <b>${s.projects}</b> projects · <b>${s.bullets}</b> bullets`;
+  }
+  const tips = d.problems.concat(s ? s.tips : []);
+  $("tips").replaceChildren(...tips.map((t) => el("li", null, t)));
+  $("tips").hidden = !tips.length;
+}
+
+async function load() {
+  const d = await api("/api/bank");
+  bank = d.bank;
+  showStatus(d);
+  if (bank) renderEditor();
+}
+
+// ---------- step 1 ----------
+
+$("resumes").addEventListener("change", () => { $("build").disabled = !$("resumes").files.length; });
+
+$("build").addEventListener("click", async () => {
+  $("build").disabled = true;
+  msg("build-msg", "Claude is reading your resume. This takes about a minute.", "busy");
+  try {
+    const r = await api("/api/bank/build", { files: await readFiles($("resumes")) });
+    msg("build-msg", `Done: ${r.jobs} jobs, ${r.projects} projects, ${r.bullets} bullets. ${(r.tokens[0] / 1000).toFixed(1)}K tokens in / ${(r.tokens[1] / 1000).toFixed(1)}K out.`
+      + (r.dropped.length ? ` Dropped ${r.dropped.length} bullet(s) whose numbers weren't in your resume.` : ""), "ok");
+    await load();
+  } catch (e) {
+    msg("build-msg", e.message, "bad");
+  }
+  $("build").disabled = false;
+});
+
+$("example").addEventListener("click", async () => {
+  await api("/api/bank/example", {});
+  load();
+});
+
+// ---------- step 2 ----------
+
+let suggestions = [];
+
+$("suggest").addEventListener("click", async () => {
+  $("suggest").disabled = true;
+  $("sugg").hidden = $("add-bar").hidden = true;
+  msg("suggest-msg", "Reading your sources. This takes about a minute.", "busy");
+  try {
+    const r = await api("/api/bank/suggest", {
+      github: $("github").value, notes: $("notes").value, files: await readFiles($("files")),
+      links: $("links").value.split("\n").map((l) => l.trim()).filter(Boolean),
+    });
+    suggestions = r.suggestions;
+    msg("suggest-msg", suggestions.length
+      ? `${suggestions.length} suggestions. Untick any that aren't right. ${(r.tokens[0] / 1000).toFixed(1)}K tokens in / ${(r.tokens[1] / 1000).toFixed(1)}K out.`
+      : "Nothing new found in those sources.", suggestions.length ? "ok" : "");
+    renderSuggestions();
+  } catch (e) {
+    msg("suggest-msg", e.message, "bad");
+  }
+  $("suggest").disabled = false;
+});
+
+function renderSuggestions() {
+  const ul = $("sugg");
+  ul.replaceChildren(...suggestions.map((s, i) => {
+    const li = el("li");
+    const box = el("input");
+    box.type = "checkbox"; box.checked = true; box.dataset.i = i;
+    box.setAttribute("aria-label", "Add this");
+    box.addEventListener("change", countChecked);
+    const body = el("div");
+    const title = el("div", "title");
+    if (s.kind === "project") {
+      title.append(el("span", "chip", "project"), s.title + (s.tools ? ` (${s.tools})` : ""));
+      const bl = el("ul");
+      bl.append(...s.bullets.map((b) => el("li", null, b)));
+      body.append(title, bl);
+    } else if (s.kind === "bullet") {
+      title.append(el("span", "chip", "bullet"), `for ${s.job_title}`);
+      body.append(title, el("div", null, s.text));
+    } else {
+      title.append(el("span", "chip", "skills"), s.label);
+      body.append(title, el("div", null, s.items));
+    }
+    const from = el("div", "from", `From ${s.source}`);
+    if (s.evidence) { from.append(": "); from.append(el("q", null, s.evidence)); }
+    body.append(from);
+    li.append(box, body);
+    return li;
+  }));
+  ul.hidden = $("add-bar").hidden = !suggestions.length;
+  countChecked();
+}
+
+function countChecked() {
+  const n = $("sugg").querySelectorAll("input:checked").length;
+  $("add").disabled = !n;
+  $("add").textContent = n === 1 ? "Add 1 to bank" : `Add ${n} to bank`;
+}
+
+$("add").addEventListener("click", async () => {
+  const chosen = [...$("sugg").querySelectorAll("input:checked")].map((b) => suggestions[b.dataset.i]);
+  try {
+    await api("/api/bank/add", { suggestions: chosen });
+    suggestions = [];
+    renderSuggestions();
+    msg("suggest-msg", `Added ${chosen.length}. Review them in step 3.`, "ok");
+    load();
+  } catch (e) {
+    msg("suggest-msg", e.message, "bad");
+  }
+});
+
+// ---------- step 3 ----------
+
+function editable(text, onchange) {
+  const span = el("span", null, text);
+  span.contentEditable = "plaintext-only";
+  span.spellcheck = true;
+  span.addEventListener("input", () => { onchange(span.textContent.trim()); dirty(); });
+  return span;
+}
+
+function removable(list, i) {
+  const x = el("button", "x", "×");
+  x.type = "button"; x.title = "Remove";
+  x.setAttribute("aria-label", "Remove");
+  x.onclick = () => { list.splice(i, 1); dirty(); renderEditor(); };
+  return x;
+}
+
+function toggle(label, value, onchange) {
+  const l = el("label", "toggle");
+  const box = el("input");
+  box.type = "checkbox"; box.checked = !!value;
+  box.onchange = () => { onchange(box.checked); dirty(); renderEditor(); };
+  l.append(box, label);
+  return l;
+}
+
+function bullets(item) {
+  const ul = el("ul", "bullets");
+  item.bullets.forEach((b, i) => {
+    const li = el("li");
+    li.append(editable(b, (t) => { item.bullets[i] = t; }), removable(item.bullets, i));
+    ul.append(li);
+  });
+  const add = el("button", "add", "+ Add a bullet");
+  add.type = "button";
+  add.onclick = () => { item.bullets.push("New bullet: what you did, and the result."); dirty(); renderEditor(); };
+  return [ul, add];
+}
+
+function renderEditor() {
+  const ed = $("editor");
+  ed.replaceChildren();
+
+  ed.append(el("h3", null, "Summaries"));
+  const sums = el("ul", "items");
+  bank.summaries.forEach((s, i) => {
+    const li = el("li");
+    li.append(editable(s, (t) => { bank.summaries[i] = t; }), removable(bank.summaries, i));
+    sums.append(li);
+  });
+  ed.append(sums);
+
+  ed.append(el("h3", null, "Skills"));
+  const skills = el("ul", "items");
+  bank.skills.forEach((g, i) => {
+    const li = el("li", "skill");
+    li.append(el("b", null, g[0] + ":"), editable(g[1], (t) => { g[1] = t; }), removable(bank.skills, i));
+    skills.append(li);
+  });
+  ed.append(skills);
+
+  ed.append(el("h3", null, "Experience"));
+  bank.experience.forEach((j, i) => {
+    const d = el("div", "block");
+    const head = el("div", "head");
+    const who = el("div");
+    who.append(el("div", "t", j.title), el("div", "sub", `${j.org} · ${j.dates}`));
+    head.append(who, toggle("required", j.required, (v) => { j.required = v; }));
+    d.append(head, ...bullets(j));
+    ed.append(d);
+  });
+
+  ed.append(el("h3", null, "Projects"));
+  bank.projects.forEach((p, i) => {
+    const d = el("div", "block" + (p.archived ? " archived" : ""));
+    const head = el("div", "head");
+    const who = el("div");
+    who.append(el("div", "t", p.title), el("div", "sub", p.tools || ""));
+    const acts = el("div", "bar");
+    acts.append(toggle("archived", p.archived, (v) => { p.archived = v; }), removable(bank.projects, i));
+    head.append(who, acts);
+    d.append(head, ...bullets(p));
+    ed.append(d);
+  });
+
+  $("raw").value = JSON.stringify(bank, null, 2);
+}
+
+function dirty() {
+  $("save").hidden = false;
+  $("raw").value = JSON.stringify(bank, null, 2);
+}
+
+async function save(b) {
+  try {
+    await api("/api/bank", { bank: b });
+    $("save").hidden = true;
+    msg("save-msg", "Saved.", "ok");
+    load();
+  } catch (e) {
+    msg("save-msg", e.message, "bad");
+  }
+}
+
+$("save").addEventListener("click", () => save(bank));
+$("save-raw").addEventListener("click", () => {
+  try { save(JSON.parse($("raw").value)); } catch (e) { msg("save-msg", "That isn't valid JSON: " + e.message, "bad"); }
+});
+addEventListener("beforeunload", (e) => { if (!$("save").hidden) e.preventDefault(); });
+
+load();
+</script>
+</body>
+</html>

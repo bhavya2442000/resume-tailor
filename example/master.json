@@ -1,0 +1,153 @@
+{
+  "name": "ALEX RIVERA",
+  "contact": [
+    {
+      "text": "alex.rivera@example.com",
+      "url": "mailto:alex.rivera@example.com"
+    },
+    {
+      "text": "555-010-0199"
+    },
+    {
+      "text": "LinkedIn",
+      "url": "https://www.linkedin.com/in/example",
+      "blue": true
+    },
+    {
+      "text": "GitHub",
+      "url": "https://github.com/example",
+      "blue": true
+    },
+    {
+      "text": "Los Angeles, CA"
+    }
+  ],
+  "summaries": [
+    "Data Analyst with 2 years of experience turning raw operational and sales data into dashboards, forecasts and recommendations that teams act on.",
+    "Financial Analyst experienced in budgeting, variance analysis and forecasting, building models in Excel and SQL that support monthly business reviews.",
+    "Business Operations Analyst who maps processes, tracks KPIs and finds the root cause of delays, using SQL, Python and Tableau.",
+    "Analytics professional with an MS in Business Analytics, comfortable across SQL, Python and BI tools and in presenting findings to non-technical leaders."
+  ],
+  "skills": [
+    [
+      "Languages",
+      "SQL, Python (pandas, NumPy, scikit-learn), R"
+    ],
+    [
+      "BI and Reporting",
+      "Tableau, Power BI, Looker, Excel (PivotTables, XLOOKUP, Power Query)"
+    ],
+    [
+      "Data",
+      "PostgreSQL, Snowflake, dbt, BigQuery, ETL, data cleaning, data modeling"
+    ],
+    [
+      "Financial",
+      "Budgeting, forecasting, variance analysis, month-end reporting, unit economics"
+    ],
+    [
+      "Statistics",
+      "A/B testing, regression, cohort analysis, time series forecasting"
+    ],
+    [
+      "Business",
+      "KPI design, process mapping, root cause analysis, stakeholder communication"
+    ]
+  ],
+  "experience": [
+    {
+      "title": "Data Analyst",
+      "org": "Harbor Home Goods (retail, fictional) | Los Angeles, CA",
+      "dates": "Jul 2024 - Present",
+      "required": true,
+      "bullets": [
+        "Built a Tableau sales dashboard on Snowflake used in weekly reviews by 14 store and category managers.",
+        "Wrote dbt models that replaced 6 manual Excel reports, cutting weekly reporting time from 5 hours to 30 minutes.",
+        "Ran a cohort analysis on 220K loyalty members that showed repeat purchase dropped 18% after the second order, leading to a new follow-up email.",
+        "Designed an A/B test of free-shipping thresholds across 40K checkouts; the winning version raised average order value by 6%.",
+        "Forecast weekly demand for 300 top items in Python, lowering stockouts in the pilot region by 11%.",
+        "Cleaned and joined point-of-sale, web and inventory data in SQL into one daily table used by the analytics team."
+      ]
+    },
+    {
+      "title": "Financial Analyst Intern",
+      "org": "Sunline Logistics (fictional) | Long Beach, CA",
+      "dates": "Jun 2023 - May 2024",
+      "required": true,
+      "bullets": [
+        "Prepared monthly budget vs. actual reports for 5 departments and explained variances above 5% to department heads.",
+        "Built an Excel cost-per-shipment model that found $240K a year in duplicate carrier charges.",
+        "Automated the month-end accrual workbook with Power Query, saving the team about 2 days each close.",
+        "Reconciled 1,200 vendor invoices a month against the ERP and flagged mismatches to accounts payable.",
+        "Built a 13-week cash flow forecast in Excel that the controller used in weekly planning."
+      ]
+    },
+    {
+      "title": "Operations Assistant",
+      "org": "Citywide Tutoring (fictional) | Pasadena, CA",
+      "dates": "Aug 2021 - May 2023",
+      "required": false,
+      "bullets": [
+        "Tracked scheduling and attendance for 90 tutors in Google Sheets and built a weekly utilization report.",
+        "Mapped the student sign-up process and removed two steps, cutting average sign-up time from 4 days to 1."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "title": "NYC Taxi Demand Forecast",
+      "tools": "Python, pandas, Prophet, BigQuery",
+      "bullets": [
+        "Queried 30M public taxi trips in BigQuery and built hourly demand features by zone and weather.",
+        "Compared Prophet and gradient boosting forecasts; the better model cut error (MAPE) from 21% to 13% on held-out weeks.",
+        "Published a notebook and short write-up explaining where the model fails, such as holidays and storms."
+      ]
+    },
+    {
+      "title": "SaaS Revenue and Churn Model",
+      "tools": "Excel, SQL",
+      "bullets": [
+        "Built a three-statement style revenue model for a sample subscription business with new, expansion and churned revenue.",
+        "Ran sensitivity tables on price and churn to show which drivers move annual recurring revenue the most.",
+        "Wrote SQL to compute monthly logo and revenue churn from raw subscription events."
+      ]
+    },
+    {
+      "title": "Hospital Wait Time Dashboard",
+      "tools": "Power BI, SQL",
+      "bullets": [
+        "Modeled a public emergency-room dataset into a star schema and built a Power BI report of wait times by hour and triage level.",
+        "Found that 60% of long waits happened in a 4-hour evening window and suggested a staffing shift to cover it."
+      ]
+    },
+    {
+      "title": "Customer Segmentation",
+      "tools": "Python, scikit-learn",
+      "bullets": [
+        "Clustered 4,000 public online-retail customers with RFM features and k-means into 5 segments.",
+        "Wrote one-page profiles for each segment with a suggested marketing action."
+      ]
+    },
+    {
+      "title": "Airline On-Time Performance Analysis",
+      "tools": "SQL, Tableau",
+      "bullets": [
+        "Loaded 7M public US flight records into PostgreSQL and measured on-time rates by airline, airport and hour.",
+        "Built a Tableau story showing that delays late in the day mostly came from earlier delays carrying forward.",
+        "Wrote a short memo ranking the 5 airports where schedule padding would help most."
+      ]
+    }
+  ],
+  "education": [
+    [
+      "MS - Business Analytics",
+      "State University (fictional), Los Angeles, CA",
+      "May 2024"
+    ],
+    [
+      "BS - Economics",
+      "State University (fictional), Los Angeles, CA",
+      "May 2021"
+    ]
+  ]
+}
