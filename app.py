@@ -112,6 +112,14 @@ def bank_state():
     return {"bank": b, "example": example, "problems": problems, "stats": onboard.stats(b) if b and not problems else None}
 
 
+def search_state():
+    try:
+        s = finder.load_settings()
+    except (ValueError, json.JSONDecodeError) as e:  # a hand-edited search.json with a mistake
+        return {"settings": None, "ready": False, "problem": f"search.json couldn't be read: {e}"}
+    return {"settings": s, "ready": finder.ready(s), "problem": None}
+
+
 def uploads(files):
     return [onboard.save_upload(f["name"], base64.b64decode(f["data"])) for f in files]
 
@@ -142,12 +150,14 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/":
             return self.send(200, (HERE / "ui.html").read_bytes(), "text/html; charset=utf-8")
-        if self.path == "/bank":
-            return self.send(200, (HERE / "bank.html").read_bytes(), "text/html; charset=utf-8")
+        if self.path in ("/bank", "/search"):
+            return self.send(200, (HERE / f"{self.path[1:]}.html").read_bytes(), "text/html; charset=utf-8")
         if self.path == "/style.css":
             return self.send(200, (HERE / "style.css").read_bytes(), "text/css; charset=utf-8")
         if self.path == "/api/bank":
             return self.send(200, json.dumps(bank_state()))
+        if self.path == "/api/search":
+            return self.send(200, json.dumps(search_state()))
         if self.path == "/api/jobs":
             with lock:
                 listing = sorted(jobs.values(), key=lambda j: -j["created"])
@@ -164,10 +174,12 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
-        if self.path.startswith("/api/bank"):
+        if self.path.startswith("/api/bank") or self.path.startswith("/api/search"):
             return self.bank_post(body)
         if self.path in ("/api/jobs", "/api/find", "/api/review") and not onboard.BANK.exists():
             return self.send(400, json.dumps({"error": "Set up your bullet bank first: open /bank."}))
+        if self.path == "/api/find" and not finder.ready(search_state()["settings"]):
+            return self.send(400, json.dumps({"error": "Tell Claude what jobs you want first: open the Search page."}))
         if self.path == "/api/jobs":
             count = submit(body.get("input", ""), body.get("effort", "medium"))
             if not count:
@@ -223,7 +235,7 @@ class Handler(BaseHTTPRequestHandler):
         return self.send(404, '{"error": "not found"}')
 
     def bank_post(self, body):
-        """Onboarding: build the bank from a resume, suggest additions from links, save edits."""
+        """Onboarding: build the bank from a resume, suggest additions from links, save edits, set up the search."""
         try:
             if self.path == "/api/bank/build":
                 return self.send(200, json.dumps(onboard.build_bank(uploads(body.get("files", [])))))
@@ -240,6 +252,12 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/bank":
                 onboard.save_bank(body["bank"])
                 return self.send(200, "{}")
+            if self.path == "/api/search/plan":
+                settings, explain, tokens = onboard.plan_search(body.get("titles", []), body.get("about", ""),
+                                                                search_state()["settings"])
+                return self.send(200, json.dumps({"settings": settings, "explain": explain, "tokens": tokens}))
+            if self.path == "/api/search":
+                return self.send(200, json.dumps({"settings": finder.save_settings(body["settings"])}))
         except Exception as e:  # show the reason on the page
             return self.send(400, json.dumps({"error": str(e) or e.__class__.__name__}))
         return self.send(404, '{"error": "not found"}')

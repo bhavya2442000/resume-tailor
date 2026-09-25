@@ -109,6 +109,7 @@ textarea.json { min-height: 320px; font: 12px/1.5 var(--mono); margin-top: 10px;
     <div class="tabs">
       <a href="/">Jobs</a>
       <a href="/bank" aria-current="page">Bullet bank</a>
+      <a href="/search">Search</a>
     </div>
   </div>
 </nav>
@@ -196,6 +197,7 @@ textarea.json { min-height: 320px; font: 12px/1.5 var(--mono); margin-top: 10px;
         <a href="#step1"><span class="num">1</span>Start from your resume</a>
         <a href="#step2"><span class="num">2</span>Add more from your links</a>
         <a href="#review" id="toc3"><span class="num">3</span>Review and edit</a>
+        <a href="/search" id="toc4" hidden><span class="num">4</span>Next: tell Claude what jobs you want</a>
       </nav>
     </aside>
   </div>
@@ -256,7 +258,7 @@ function showStatus(d) {
   const s = d.stats;
   $("example").hidden = !!d.bank;
   $("replace").hidden = !d.bank;
-  $("review").hidden = $("toc3").hidden = !d.bank;
+  $("review").hidden = $("toc3").hidden = $("toc4").hidden = !d.bank;
   $("n1").classList.toggle("done", !!d.bank && !d.example);
   $("n1").textContent = d.bank && !d.example ? "✓" : "1";
   const box = $("stats");

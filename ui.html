@@ -83,6 +83,7 @@ ol { list-style: none; margin: 0; padding: 0; }
     <div class="tabs">
       <a href="/" aria-current="page">Jobs</a>
       <a href="/bank">Bullet bank</a>
+      <a href="/search">Search</a>
     </div>
     <div class="spacer"></div>
     <span class="pill" id="bankpill"></span>
@@ -101,6 +102,11 @@ ol { list-style: none; margin: 0; padding: 0; }
   <div class="banner" id="nobank" hidden>
     <div><b>Start with your bullet bank</b><span>Upload your resume once. Every tailored resume is built only from facts in the bank.</span></div>
     <a class="btn primary" href="/bank">Set up your bank</a>
+  </div>
+
+  <div class="banner" id="nosearch" hidden>
+    <div><b>Tell Claude what jobs you want</b><span>Add the job titles you want and describe what you're looking for. Claude sets up your daily search from that and your bank.</span></div>
+    <a class="btn primary" href="/search">Set up your search</a>
   </div>
 
   <div class="layout">
@@ -461,6 +467,8 @@ fetch("/api/bank").then((r) => r.json()).then((d) => {
   const pill = $("bankpill");
   pill.classList.toggle("off", !d.bank);
   pill.replaceChildren(el("span", "dot"), !d.bank ? "No bank yet" : !d.stats ? "Bank needs fixing" : `Bank: ${d.stats.bullets} bullets${d.example ? " (example)" : ""}`);
+  // One setup step at a time: the bank first, then the search.
+  if (d.bank) fetch("/api/search").then((r) => r.json()).then((s) => { $("nosearch").hidden = s.ready; });
 });
 </script>
 </body>

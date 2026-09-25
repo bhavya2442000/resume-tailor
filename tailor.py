@@ -174,11 +174,11 @@ def trim_jd(jd):
 
 
 def ask_claude(bank, jd, feedback=None, effort="medium"):
-    prompt = f"<bullet_bank>\n{json.dumps(bank, separators=(",", ":"), ensure_ascii=False)}\n</bullet_bank>\n\n<job_description>\n{jd}\n</job_description>"
+    prompt = f"<bullet_bank>\n{json.dumps(bank, separators=(',', ':'), ensure_ascii=False)}\n</bullet_bank>\n\n<job_description>\n{jd}\n</job_description>"
     if feedback:
         prompt += f"\n\n{feedback}"
     # JSON asked for in the prompt, not via --json-schema, which costs an extra internal turn.
-    prompt += f"\n\nReply with only a JSON object matching this schema, no prose or code fence:\n{json.dumps(SCHEMA, separators=(",", ":"))}"
+    prompt += f"\n\nReply with only a JSON object matching this schema, no prose or code fence:\n{json.dumps(SCHEMA, separators=(',', ':'))}"
     text, tokens = call_claude(prompt, SYSTEM, effort=effort)
     try:
         t = json.loads(text[text.find("{"):text.rfind("}") + 1])
