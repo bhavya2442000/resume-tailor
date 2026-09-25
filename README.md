@@ -85,5 +85,5 @@ The calls turn off memory, skills and MCP servers (`--setting-sources "" --stric
 | `finder.py` | Finds jobs and picks the ones that fit. Settings are at the top. |
 | `tailor.py` | Fetches a posting, asks Claude for a draft, checks it against the bank, builds the PDF. |
 | `build.py` | Renders the resume to a one-page PDF with headless Chrome, tightening spacing until it fits. |
-| `app.py` + `ui.html` | The local web page. |
+| `app.py` + `ui.html` + `style.css` | The local web page. |
 | `jobs/`, `drafts/`, `library/`, `uploads/` | Your found jobs, drafts, saved resumes and uploaded files. These folders are in `.gitignore`. |

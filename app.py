@@ -144,6 +144,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200, (HERE / "ui.html").read_bytes(), "text/html; charset=utf-8")
         if self.path == "/bank":
             return self.send(200, (HERE / "bank.html").read_bytes(), "text/html; charset=utf-8")
+        if self.path == "/style.css":
+            return self.send(200, (HERE / "style.css").read_bytes(), "text/css; charset=utf-8")
         if self.path == "/api/bank":
             return self.send(200, json.dumps(bank_state()))
         if self.path == "/api/jobs":

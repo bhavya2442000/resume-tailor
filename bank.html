@@ -4,155 +4,206 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your Bullet Bank</title>
+<link rel="stylesheet" href="/style.css">
 <style>
-:root {
-  --ground: #f4f5f7; --surface: #ffffff; --ink: #16191f; --muted: #5e6573; --line: #dde1e7;
-  --accent: #1f4fd1; --accent-soft: #e6ecfb; --ok: #1e7b4c; --ok-soft: #e3f3ea;
-  --warn: #9a5c00; --warn-soft: #fbf0dc; --bad: #b3261e; --bad-soft: #fbe6e4;
-  --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, monospace;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ground: #111317; --surface: #1a1d23; --ink: #e9ebef; --muted: #9aa2af; --line: #2c313a;
-    --accent: #8aa8ff; --accent-soft: #1e2744; --ok: #6fcf97; --ok-soft: #16301f;
-    --warn: #f0b95c; --warn-soft: #33260f; --bad: #ff8a80; --bad-soft: #3a1a18;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --ground: #111317; --surface: #1a1d23; --ink: #e9ebef; --muted: #9aa2af; --line: #2c313a;
-  --accent: #8aa8ff; --accent-soft: #1e2744; --ok: #6fcf97; --ok-soft: #16301f;
-  --warn: #f0b95c; --warn-soft: #33260f; --bad: #ff8a80; --bad-soft: #3a1a18;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; }
-body { background: var(--ground); color: var(--ink); font: 15px/1.5 var(--sans); padding: 40px 16px 64px; }
-main { max-width: 780px; margin: 0 auto; display: grid; gap: 24px; }
-main > * { min-width: 0; }
-a { color: var(--accent); }
-h1 { font: 600 30px/1.15 var(--serif); margin: 6px 0 0; letter-spacing: -0.01em; }
-header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
-.back { font-size: 13px; text-decoration: none; }
-section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
-h2 { font: 600 17px/1.3 var(--serif); margin: 0; }
-h2 .step { font: 600 12px var(--sans); color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 2px 9px; margin-right: 8px; vertical-align: 2px; }
-h3 { font: 600 12px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 10px 0 0; }
-p { margin: 0; }
-.hint { color: var(--muted); font-size: 13px; }
-label { font-weight: 600; font-size: 13px; display: grid; gap: 4px; }
-input[type=text], textarea { width: 100%; font: 14px/1.5 var(--sans); color: var(--ink); background: var(--ground);
-  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-textarea { min-height: 70px; resize: vertical; }
-textarea.json { min-height: 320px; font: 13px/1.5 var(--mono); }
-input[type=file] { font: 13px var(--sans); color: var(--muted); }
-input:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible, [contenteditable]:focus-visible, summary:focus-visible {
-  outline: 2px solid var(--accent); outline-offset: 2px; }
-.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-button { font: 600 14px var(--sans); border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid transparent; }
-.primary { background: var(--accent); color: var(--surface); }
-.primary:disabled { opacity: 0.45; cursor: default; }
-.quiet { background: none; color: var(--muted); border-color: var(--line); padding: 6px 12px; font-size: 13px; }
-.x { background: none; border: 0; color: var(--muted); padding: 0 6px; font-size: 16px; line-height: 1; }
-.x:hover { color: var(--bad); }
-.msg { font-size: 13px; margin: 0; }
-.msg.busy { color: var(--accent); }
-.msg.bad { color: var(--bad); }
-.msg.ok { color: var(--ok); }
-.stats { font-size: 14px; }
-.stats b { font-variant-numeric: tabular-nums; }
-.tips { margin: 0; padding: 10px 12px 10px 28px; background: var(--warn-soft); color: var(--warn); border-radius: 8px; font-size: 13px; }
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-ul.sugg, ul.items { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-ul.sugg > li { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-ul.sugg input { margin-top: 5px; }
-.chip { font: 600 11px var(--sans); letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
-  background: var(--accent-soft); color: var(--accent); margin-right: 6px; }
-.sugg .title { font-weight: 600; }
-.sugg ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; }
-.from { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.steps { display: grid; gap: 20px; }
+.step-h { display: flex; gap: 14px; align-items: flex-start; padding: 18px 18px 0; }
+.num { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--sans);
+  background: var(--accent-soft); color: var(--accent); }
+.num.done { background: var(--ok); color: var(--surface); }
+.step-h h2 { font-size: 17px; margin-top: 3px; }
+.step-h .hint { margin-top: 4px; font-size: 14px; }
+.step-b { padding: 16px 18px 18px 60px; display: grid; gap: 14px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+/* drop zone: a transparent file input covers the box, so clicking and dropping both work */
+.drop { position: relative; display: grid; place-items: center; text-align: center; gap: 2px; padding: 22px 16px; border: 1.5px dashed var(--line-2);
+  border-radius: 10px; background: var(--raised); color: var(--muted); font-weight: 400; font-size: 13px; transition: border-color 0.12s, background 0.12s; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.drop .big { font-size: 22px; line-height: 1; margin-bottom: 4px; }
+.drop b { color: var(--ink); font-size: 14px; }
+.drop .picked { color: var(--accent); font-weight: 600; margin-top: 4px; overflow-wrap: anywhere; }
+.drop.slim { padding: 12px; }
+
+/* side: status */
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tile { background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.tile b { display: block; font: 700 22px/1.1 var(--sans); font-variant-numeric: tabular-nums; }
+.tile span { font-size: 12px; color: var(--muted); }
+.meter { height: 6px; border-radius: 6px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: 6px; transition: width 0.3s; }
+.meter.full i { background: var(--ok); }
+.meter-l { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.example-note { font-size: 13px; background: var(--warn-soft); color: var(--warn); padding: 8px 10px; border-radius: 8px; }
+.tips { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.tips li { font-size: 13px; color: var(--ink-2); padding-left: 22px; position: relative; }
+.tips li::before { content: "!"; position: absolute; left: 0; top: 1px; width: 15px; height: 15px; border-radius: 50%; background: var(--warn-soft);
+  color: var(--warn); font: 700 10px/15px var(--sans); text-align: center; }
+.toc { display: grid; gap: 2px; }
+.toc a { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 6px; color: var(--ink-2); text-decoration: none; font-size: 14px; }
+.toc a:hover { background: var(--ground); }
+.toc .num { width: 22px; height: 22px; font-size: 11px; }
+
+/* suggestions */
+ul.sugg { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+ul.sugg > li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 12px 14px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--raised); align-items: start; }
+ul.sugg > li:has(input:checked) { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: var(--accent-soft); }
+ul.sugg input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent); }
+.sugg .title { font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sugg ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
+.sugg .text { margin-top: 4px; font-size: 14px; }
+.from { color: var(--muted); font-size: 12px; margin-top: 6px; }
 .from q { font-style: italic; }
-.block { border-bottom: 1px solid var(--line); padding: 10px 0; }
-.block:last-child { border-bottom: 0; }
-.head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; }
-.head .t { font: 600 16px/1.3 var(--serif); }
+.kind-project { color: #7c3aed; background: #7c3aed1a; border-color: transparent; }
+.kind-bullet { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: transparent; }
+.kind-skills { color: #0d9488; background: #0d94881a; border-color: transparent; }
+
+/* editor */
+#editor { display: grid; gap: 22px; }
+.group { display: grid; gap: 8px; }
+.group > h3 { display: flex; justify-content: space-between; align-items: baseline; }
+ul.items { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+ul.items > li { display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 14px; }
+ul.items > li:last-child { border-bottom: 0; }
+.skill b { flex: none; width: 130px; padding-top: 4px; font-weight: 600; }
+@media (max-width: 640px) { .skill { flex-wrap: wrap; } .skill b { width: 100%; } }
+.block { border: 1px solid var(--line); border-radius: 10px; padding: 14px 14px 10px; background: var(--surface); }
+.block.archived { opacity: 0.55; background: var(--raised); }
+.head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: flex-start; justify-content: space-between; }
+.head .t { font: 600 15px/1.35 var(--sans); }
 .head .sub { color: var(--muted); font-size: 13px; }
-.toggle { font-weight: 400; font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
-ul.items > li, .bullets > li { display: flex; gap: 6px; align-items: flex-start; padding: 4px 0; }
-ul.items > li { border-bottom: 1px solid var(--line); padding: 8px 0; }
-.bullets { list-style: none; margin: 6px 0 0; padding: 0; }
-.bullets > li::before { content: "•"; color: var(--muted); }
-[contenteditable] { flex: 1; min-width: 0; border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+.head .bar { gap: 4px; }
+.toggle { font-weight: 500; font-size: 12px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px 4px 8px; user-select: none; }
+.toggle:has(input:checked) { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+.toggle input { margin: 0; accent-color: var(--ok); }
+.bullets { list-style: none; margin: 10px 0 4px; padding: 0; display: grid; gap: 2px; }
+.bullets > li { display: flex; gap: 6px; align-items: flex-start; font-size: 14px; }
+.bullets > li::before { content: "•"; color: var(--muted); padding-top: 3px; }
+[contenteditable] { flex: 1; min-width: 0; border-radius: 6px; padding: 3px 6px; overflow-wrap: anywhere; border: 1px solid transparent; }
 [contenteditable]:hover { background: var(--ground); }
-.skill b { white-space: nowrap; }
-.add { background: none; border: 0; color: var(--accent); font-size: 13px; padding: 4px 0; }
-.archived { opacity: 0.5; }
-.save { position: sticky; bottom: 12px; justify-self: end; box-shadow: 0 4px 16px #0003; }
-details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
-@media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+[contenteditable]:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.x { background: none; border: 0; color: var(--muted); padding: 4px 6px; font-size: 16px; line-height: 1; border-radius: 6px; opacity: 0.5; }
+li:hover > .x, .head .x { opacity: 1; }
+.x:hover { color: var(--bad); background: var(--bad-soft); }
+textarea.json { min-height: 320px; font: 12px/1.5 var(--mono); margin-top: 10px; }
+.savebar { position: sticky; bottom: 16px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--ink); color: var(--surface); padding: 10px 10px 10px 16px; border-radius: 12px; box-shadow: var(--shadow-lg); margin: 0 18px 18px 60px; }
+.savebar:has(#save[hidden]) { display: none; }
+.savebar span { font-size: 14px; font-weight: 500; }
+
+@media (max-width: 640px) {
+  .step-b { padding-left: 18px; }
+  .savebar { margin-left: 18px; }
+  .grid2 { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <a class="back" href="/">← Resume Tailor</a>
-    <h1>Your bullet bank</h1>
-    <p>Everything a resume can say about you lives in one file, <code>master.json</code>. Each tailored resume picks from it and never adds facts, so the more true detail it holds, the better each resume fits.</p>
+<nav class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="/"><span class="mark">R</span><span>Resume Tailor</span></a>
+    <div class="tabs">
+      <a href="/">Jobs</a>
+      <a href="/bank" aria-current="page">Bullet bank</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="hero">
+    <div>
+      <h1>Your bullet bank</h1>
+      <p>Everything a resume can say about you, in one file (<code>master.json</code>). Each tailored resume picks from it and never adds facts, so the more true detail it holds, the better each resume fits.</p>
+    </div>
   </header>
 
-  <section aria-live="polite">
-    <p class="stats" id="stats">Loading…</p>
-    <ul class="tips" id="tips" hidden></ul>
-  </section>
+  <div class="layout">
+    <div class="steps">
+      <section class="card" id="step1">
+        <div class="step-h"><span class="num" id="n1">1</span>
+          <div><h2>Start from your resume</h2>
+            <p class="hint">Claude copies the facts from your resume into the bank. Upload several versions at once to merge them.</p></div>
+        </div>
+        <div class="step-b">
+          <label class="drop" id="drop-resumes">
+            <input type="file" id="resumes" multiple accept=".pdf,.docx,.txt,.md">
+            <span class="big">⬆</span>
+            <b>Drop your resume here, or click to choose</b>
+            <span>PDF, DOCX or TXT. Your LinkedIn PDF works too: on your profile, click More → Save to PDF.</span>
+            <span class="picked"></span>
+          </label>
+          <div class="bar">
+            <button class="primary" id="build" type="button" disabled>Build my bank</button>
+            <button class="secondary" id="example" type="button" hidden>Try the example (Alex Rivera)</button>
+          </div>
+          <p class="hint" id="replace" hidden>This replaces your current bank. The old one is kept as <code>master.backup.json</code>.</p>
+          <p class="msg" id="build-msg"></p>
+        </div>
+      </section>
 
-  <section>
-    <h2><span class="step">1</span>Start from your resume</h2>
-    <p class="hint">Upload your resume as a PDF, DOCX or TXT. Upload several versions at once to merge them. Your LinkedIn PDF helps too: on your profile, click <b>More → Save to PDF</b>.</p>
-    <input type="file" id="resumes" multiple accept=".pdf,.docx,.txt,.md">
-    <div class="bar">
-      <button class="primary" id="build" type="button" disabled>Build my bank</button>
-      <button class="quiet" id="example" type="button" hidden>Try the example (Alex Rivera)</button>
+      <section class="card" id="step2">
+        <div class="step-h"><span class="num">2</span>
+          <div><h2>Add more from your links</h2>
+            <p class="hint">Claude reads these and suggests projects, bullets and skills your bank is missing, each with the line it came from. Nothing is added until you tick it.</p></div>
+        </div>
+        <div class="step-b">
+          <div class="grid2">
+            <div class="field"><label for="github">GitHub username or repo link</label>
+              <input type="text" id="github" placeholder="octocat or github.com/you/project"></div>
+            <div class="field"><label for="files">Files: LinkedIn PDF, project write-ups</label>
+              <label class="drop slim"><input type="file" id="files" multiple accept=".pdf,.docx,.txt,.md"><b>Choose files</b><span class="picked"></span></label></div>
+          </div>
+          <div class="field"><label for="links">Website, portfolio or blog links, one per line</label>
+            <textarea id="links" placeholder="https://yourname.com&#10;https://yourname.com/projects/churn-model"></textarea></div>
+          <div class="field"><label for="notes">Notes: anything else you've done (a project, a result, a tool you used)</label>
+            <textarea id="notes" placeholder="At my internship I also rebuilt the weekly sales report in Power BI; it cut prep time from a day to an hour."></textarea></div>
+          <div class="bar"><button class="primary" id="suggest" type="button">Find content</button></div>
+          <p class="msg" id="suggest-msg"></p>
+          <ul class="sugg" id="sugg" hidden></ul>
+          <div class="bar" id="add-bar" hidden><button class="primary" id="add" type="button">Add to bank</button></div>
+        </div>
+      </section>
+
+      <section class="card" id="review" hidden>
+        <div class="step-h"><span class="num">3</span>
+          <div><h2>Review and edit</h2>
+            <p class="hint">Click any text to edit it. Keep only what's true, and add a number wherever you have a real one. Mark <b>required</b> the jobs every resume must show; <b>archive</b> projects you want to keep but not use.</p></div>
+        </div>
+        <div class="step-b">
+          <div id="editor"></div>
+          <details>
+            <summary>Edit the raw JSON (name, contact, education)</summary>
+            <textarea class="json" id="raw" spellcheck="false"></textarea>
+            <div class="bar"><button class="secondary small" id="save-raw" type="button">Save JSON</button></div>
+          </details>
+          <p class="msg" id="save-msg"></p>
+        </div>
+        <div class="savebar"><span>You have unsaved changes</span><button class="primary" id="save" type="button" hidden>Save changes</button></div>
+      </section>
     </div>
-    <p class="hint" id="replace" hidden>This replaces your current bank. The old one is kept as <code>master.backup.json</code>.</p>
-    <p class="msg" id="build-msg"></p>
-  </section>
 
-  <section>
-    <h2><span class="step">2</span>Add more from your links</h2>
-    <p class="hint">Claude reads these and suggests projects, bullets and skills your bank is missing. Each suggestion shows the line it came from. Nothing is added until you tick it.</p>
-    <div class="grid2">
-      <label>GitHub username or repo link <input type="text" id="github" placeholder="octocat or github.com/you/project"></label>
-      <label>Files: LinkedIn PDF, project write-ups <input type="file" id="files" multiple accept=".pdf,.docx,.txt,.md"></label>
-    </div>
-    <label>Website, portfolio or blog links, one per line
-      <textarea id="links" placeholder="https://yourname.com&#10;https://yourname.com/projects/churn-model"></textarea></label>
-    <label>Notes: anything else you've done (a project, a result, a tool you used)
-      <textarea id="notes" placeholder="At my internship I also rebuilt the weekly sales report in Power BI; it cut prep time from a day to an hour."></textarea></label>
-    <div class="bar"><button class="primary" id="suggest" type="button">Find content</button></div>
-    <p class="msg" id="suggest-msg"></p>
-    <ul class="sugg" id="sugg" hidden></ul>
-    <div class="bar" id="add-bar" hidden><button class="primary" id="add" type="button">Add to bank</button></div>
-  </section>
-
-  <section id="review" hidden>
-    <h2><span class="step">3</span>Review and edit</h2>
-    <p class="hint">Click any text to edit it, then save. Keep only what's true, and add a number wherever you have a real one. Mark <b>required</b> the jobs every resume must show. <b>Archive</b> projects you want to keep but not use.</p>
-    <div id="editor"></div>
-    <details>
-      <summary>Edit the raw JSON (name, contact, education)</summary>
-      <textarea class="json" id="raw" spellcheck="false"></textarea>
-      <div class="bar"><button class="quiet" id="save-raw" type="button">Save JSON</button></div>
-    </details>
-    <p class="msg" id="save-msg"></p>
-    <button class="primary save" id="save" type="button" hidden>Save changes</button>
-  </section>
+    <aside class="side">
+      <section class="card" aria-live="polite">
+        <div class="card-h"><h2>Bank status</h2></div>
+        <div class="card-b" id="stats">Loading…</div>
+        <div class="card-b" style="padding-top:0"><ul class="tips" id="tips" hidden></ul></div>
+      </section>
+      <nav class="card toc card-b" aria-label="Steps">
+        <a href="#step1"><span class="num">1</span>Start from your resume</a>
+        <a href="#step2"><span class="num">2</span>Add more from your links</a>
+        <a href="#review" id="toc3"><span class="num">3</span>Review and edit</a>
+      </nav>
+    </aside>
+  </div>
 </main>
 
 <script>
 const $ = (id) => document.getElementById(id);
+const TARGET = 25;   // a one-page resume uses 17-19 bullets; this leaves room to choose
 let bank = null;
 
 function el(tag, cls, text) {
@@ -163,7 +214,7 @@ function el(tag, cls, text) {
 }
 
 function msg(id, text, kind = "") {
-  $(id).textContent = text;
+  $(id).replaceChildren(...(kind === "busy" ? [el("span", "spin")] : []), text);
   $(id).className = "msg " + kind;
 }
 
@@ -183,22 +234,53 @@ async function readFiles(input) {
   })));
 }
 
+// Drop zones: show the chosen file names, highlight while dragging.
+for (const input of document.querySelectorAll(".drop input")) {
+  const zone = input.closest(".drop");
+  input.addEventListener("change", () => {
+    zone.querySelector(".picked").textContent = [...input.files].map((f) => f.name).join(", ");
+  });
+  input.addEventListener("dragenter", () => zone.classList.add("over"));
+  for (const ev of ["dragleave", "drop"]) input.addEventListener(ev, () => zone.classList.remove("over"));
+}
+
 // ---------- status ----------
+
+function tile(n, label) {
+  const t = el("div", "tile");
+  t.append(el("b", null, n), el("span", null, label));
+  return t;
+}
 
 function showStatus(d) {
   const s = d.stats;
   $("example").hidden = !!d.bank;
   $("replace").hidden = !d.bank;
-  $("review").hidden = !d.bank;
+  $("review").hidden = $("toc3").hidden = !d.bank;
+  $("n1").classList.toggle("done", !!d.bank && !d.example);
+  $("n1").textContent = d.bank && !d.example ? "✓" : "1";
+  const box = $("stats");
   if (!d.bank) {
-    $("stats").textContent = "No bank yet. Upload your resume below, or try the example first.";
+    box.replaceChildren(el("p", "hint", "No bank yet. Upload your resume in step 1, or try the example first."));
+  } else if (!s) {
+    box.replaceChildren(el("p", "hint", "The bank has problems to fix before it can be used:"));
   } else {
-    $("stats").innerHTML = (d.example ? "<b>Example bank (Alex Rivera, a made-up person).</b> Build your own below. " : "")
-      + `<b>${s.jobs}</b> jobs · <b>${s.projects}</b> projects · <b>${s.bullets}</b> bullets`;
+    const tiles = el("div", "tiles");
+    tiles.append(tile(s.jobs, "jobs"), tile(s.projects, "projects"), tile(s.bullets, "bullets"));
+    const label = el("div", "meter-l");
+    label.append(el("span", null, "Bullets to choose from"), el("span", null, `${s.bullets} / ${TARGET}`));
+    const meter = el("div", "meter" + (s.bullets >= TARGET ? " full" : ""));
+    const fill = el("i");
+    fill.style.width = Math.min(100, (s.bullets / TARGET) * 100) + "%";
+    meter.append(fill);
+    const wrap = el("div");
+    wrap.append(label, meter);
+    box.replaceChildren(...(d.example ? [el("p", "example-note", "This is the example bank (Alex Rivera, a made-up person). Build your own in step 1.")] : []), tiles, wrap);
   }
   const tips = d.problems.concat(s ? s.tips : []);
   $("tips").replaceChildren(...tips.map((t) => el("li", null, t)));
   $("tips").hidden = !tips.length;
+  $("tips").parentElement.hidden = !tips.length;
 }
 
 async function load() {
@@ -266,16 +348,16 @@ function renderSuggestions() {
     const body = el("div");
     const title = el("div", "title");
     if (s.kind === "project") {
-      title.append(el("span", "chip", "project"), s.title + (s.tools ? ` (${s.tools})` : ""));
+      title.append(el("span", "chip kind-project", "project"), s.title + (s.tools ? ` (${s.tools})` : ""));
       const bl = el("ul");
       bl.append(...s.bullets.map((b) => el("li", null, b)));
       body.append(title, bl);
     } else if (s.kind === "bullet") {
-      title.append(el("span", "chip", "bullet"), `for ${s.job_title}`);
-      body.append(title, el("div", null, s.text));
+      title.append(el("span", "chip kind-bullet", "bullet"), `for ${s.job_title}`);
+      body.append(title, el("div", "text", s.text));
     } else {
-      title.append(el("span", "chip", "skills"), s.label);
-      body.append(title, el("div", null, s.items));
+      title.append(el("span", "chip kind-skills", "skills"), s.label);
+      body.append(title, el("div", "text", s.items));
     }
     const from = el("div", "from", `From ${s.source}`);
     if (s.evidence) { from.append(": "); from.append(el("q", null, s.evidence)); }
@@ -340,58 +422,67 @@ function bullets(item) {
     li.append(editable(b, (t) => { item.bullets[i] = t; }), removable(item.bullets, i));
     ul.append(li);
   });
-  const add = el("button", "add", "+ Add a bullet");
+  const add = el("button", "link", "+ Add a bullet");
   add.type = "button";
   add.onclick = () => { item.bullets.push("New bullet: what you did, and the result."); dirty(); renderEditor(); };
   return [ul, add];
+}
+
+function group(title, count) {
+  const g = el("div", "group");
+  const h = el("h3", null, title);
+  if (count != null) h.append(el("span", null, count));
+  g.append(h);
+  return g;
 }
 
 function renderEditor() {
   const ed = $("editor");
   ed.replaceChildren();
 
-  ed.append(el("h3", null, "Summaries"));
+  const sg = group("Summaries", bank.summaries.length);
   const sums = el("ul", "items");
   bank.summaries.forEach((s, i) => {
     const li = el("li");
     li.append(editable(s, (t) => { bank.summaries[i] = t; }), removable(bank.summaries, i));
     sums.append(li);
   });
-  ed.append(sums);
+  sg.append(sums);
 
-  ed.append(el("h3", null, "Skills"));
+  const kg = group("Skills", bank.skills.length + " groups");
   const skills = el("ul", "items");
   bank.skills.forEach((g, i) => {
     const li = el("li", "skill");
     li.append(el("b", null, g[0] + ":"), editable(g[1], (t) => { g[1] = t; }), removable(bank.skills, i));
     skills.append(li);
   });
-  ed.append(skills);
+  kg.append(skills);
 
-  ed.append(el("h3", null, "Experience"));
-  bank.experience.forEach((j, i) => {
+  const eg = group("Experience", bank.experience.length);
+  bank.experience.forEach((j) => {
     const d = el("div", "block");
     const head = el("div", "head");
     const who = el("div");
     who.append(el("div", "t", j.title), el("div", "sub", `${j.org} · ${j.dates}`));
-    head.append(who, toggle("required", j.required, (v) => { j.required = v; }));
+    head.append(who, toggle("Required", j.required, (v) => { j.required = v; }));
     d.append(head, ...bullets(j));
-    ed.append(d);
+    eg.append(d);
   });
 
-  ed.append(el("h3", null, "Projects"));
+  const pg = group("Projects", bank.projects.length);
   bank.projects.forEach((p, i) => {
     const d = el("div", "block" + (p.archived ? " archived" : ""));
     const head = el("div", "head");
     const who = el("div");
     who.append(el("div", "t", p.title), el("div", "sub", p.tools || ""));
     const acts = el("div", "bar");
-    acts.append(toggle("archived", p.archived, (v) => { p.archived = v; }), removable(bank.projects, i));
+    acts.append(toggle("Archived", p.archived, (v) => { p.archived = v; }), removable(bank.projects, i));
     head.append(who, acts);
     d.append(head, ...bullets(p));
-    ed.append(d);
+    pg.append(d);
   });
 
+  ed.append(sg, kg, eg, pg);
   $("raw").value = JSON.stringify(bank, null, 2);
 }
 

@@ -4,179 +4,149 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Resume Tailor</title>
+<link rel="stylesheet" href="/style.css">
 <style>
-:root {
-  --ground: #f4f5f7;
-  --surface: #ffffff;
-  --ink: #16191f;
-  --muted: #5e6573;
-  --line: #dde1e7;
-  --accent: #1f4fd1;
-  --accent-soft: #e6ecfb;
-  --ok: #1e7b4c;
-  --ok-soft: #e3f3ea;
-  --warn: #9a5c00;
-  --warn-soft: #fbf0dc;
-  --bad: #b3261e;
-  --bad-soft: #fbe6e4;
-  --serif: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, monospace;
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ground: #111317; --surface: #1a1d23; --ink: #e9ebef; --muted: #9aa2af; --line: #2c313a;
-    --accent: #8aa8ff; --accent-soft: #1e2744; --ok: #6fcf97; --ok-soft: #16301f;
-    --warn: #f0b95c; --warn-soft: #33260f; --bad: #ff8a80; --bad-soft: #3a1a18;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --ground: #111317; --surface: #1a1d23; --ink: #e9ebef; --muted: #9aa2af; --line: #2c313a;
-  --accent: #8aa8ff; --accent-soft: #1e2744; --ok: #6fcf97; --ok-soft: #16301f;
-  --warn: #f0b95c; --warn-soft: #33260f; --bad: #ff8a80; --bad-soft: #3a1a18;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; }
-body { background: var(--ground); color: var(--ink); font: 15px/1.5 var(--sans); padding: 40px 16px 64px; }
-main { max-width: 780px; margin: 0 auto; display: grid; gap: 28px; }
-main > *, .finder > * { min-width: 0; }
-h1 { font: 600 30px/1.15 var(--serif); margin: 0; letter-spacing: -0.01em; }
-header p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
-.compose { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
-label { font-weight: 600; font-size: 13px; letter-spacing: 0.02em; }
-textarea { width: 100%; min-height: 150px; resize: vertical; font: 14px/1.5 var(--mono); color: var(--ink);
-  background: var(--ground); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
-textarea:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-.count { color: var(--muted); font-size: 13px; }
-.effort { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-.effort select { font: 13px var(--sans); color: var(--ink); background: var(--ground); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
-.go { display: inline-flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.count b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-button { font: 600 14px var(--sans); border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid transparent; }
-.primary { background: var(--accent); color: var(--surface); }
-.primary:disabled { opacity: 0.45; cursor: default; }
-.quiet { background: none; color: var(--muted); border-color: var(--line); padding: 6px 12px; font-size: 13px; }
-.error { color: var(--bad); font-size: 13px; margin: 0; }
-.list-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-h2 { font: 600 13px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0; }
-ol { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--line); }
-li { display: grid; grid-template-columns: 96px 1fr auto; gap: 4px 16px; padding: 14px 0; border-bottom: 1px solid var(--line); align-items: start; }
-.chip { justify-self: start; font: 600 11px var(--sans); letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
-  background: var(--line); color: var(--muted); display: inline-flex; align-items: center; gap: 6px; margin-top: 3px; }
-.chip.busy { background: var(--accent-soft); color: var(--accent); }
-.chip.done { background: var(--ok-soft); color: var(--ok); }
-.chip.failed { background: var(--bad-soft); color: var(--bad); }
-.chip.busy::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.2s ease-in-out infinite; }
-@keyframes pulse { 50% { opacity: 0.25; } }
-@media (prefers-reduced-motion: reduce) { .chip.busy::before { animation: none; } }
+/* ---------- found jobs ---------- */
+.finder .card-h { padding-bottom: 4px; }
+.run { color: var(--muted); font-size: 13px; padding: 0 18px; }
+.run.busy { color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.bar-track { height: 3px; background: var(--accent-soft); overflow: hidden; margin: 12px 18px 0; border-radius: 3px; }
+.bar-track::after { content: ""; display: block; height: 100%; width: 30%; background: var(--accent); border-radius: 3px; animation: slide 1.4s ease-in-out infinite; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 18px 0; }
+.filters button { background: none; border: 1px solid var(--line); color: var(--muted); padding: 6px 11px; font-size: 13px; border-radius: 999px; }
+.filters button b { color: var(--ink); font-variant-numeric: tabular-nums; margin-left: 2px; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.filters button[aria-pressed="true"] b { color: var(--surface); }
+
+ol { list-style: none; margin: 0; padding: 0; }
+.found { margin-top: 14px; border-top: 1px solid var(--line); }
+.found > li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 4px 14px; padding: 18px; border-bottom: 1px solid var(--line);
+  align-items: start; transition: background 0.15s; }
+.found > li:last-child { border-bottom: 0; border-radius: 0 0 var(--radius) var(--radius); }
+.found > li:hover { background: var(--raised); }
+.found > li.approved { box-shadow: inset 3px 0 0 var(--ok); }
+.found > li.skipped { opacity: 0.55; padding-top: 12px; padding-bottom: 12px; }
+.found > li.skipped .why, .found > li.skipped details, .found > li.skipped .tags { display: none; }
+.avatar { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; font: 700 17px var(--sans);
+  color: hsl(var(--h) 60% 42%); background: hsl(var(--h) 70% 50% / 0.12); }
+.found > li.skipped .avatar { width: 32px; height: 32px; font-size: 14px; }
 .what { min-width: 0; }
-.name { font: 600 17px/1.3 var(--serif); overflow-wrap: anywhere; }
-.name .role { font-weight: 400; }
-.sub { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-.sub .tokens { font: 12px var(--mono); }
-.warn { color: var(--warn); background: var(--warn-soft); font-size: 13px; padding: 6px 10px; border-radius: 6px; margin-top: 8px; }
-.fail { color: var(--bad); font-size: 13px; margin-top: 2px; overflow-wrap: anywhere; }
-details { margin-top: 8px; font-size: 13px; }
-summary { cursor: pointer; color: var(--muted); }
-details ul { margin: 6px 0 0; padding-left: 18px; }
-details li { display: list-item; border: 0; padding: 2px 0; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-.actions a { font: 600 13px var(--sans); color: var(--accent); text-decoration: none; padding: 6px 12px; border: 1px solid var(--accent); border-radius: 8px; }
-.saved { font: 600 13px var(--sans); color: var(--ok); padding: 6px 0; }
-.lib li { grid-template-columns: 1fr auto; }
-.lib .name { font-size: 16px; }
-.empty { color: var(--muted); padding: 20px 0; border-bottom: 1px solid var(--line); }
-.finder { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; }
-.finder .list-head { align-items: center; }
-.finder .run { color: var(--muted); font-size: 13px; margin: 0; }
-.finder .run.busy { color: var(--accent); }
-.progress { color: var(--muted); font-size: 13px; margin: 0; }
-.progress b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-.found { margin: 0; }
-.found > li { grid-template-columns: 1fr auto; gap: 6px 16px; padding: 16px 0; }
-.found .name { font-size: 17px; }
-.found .why { font-size: 14px; margin-top: 6px; padding-left: 10px; border-left: 3px solid var(--accent); }
-.found details { margin-top: 6px; }
-.found .reqs { white-space: pre-wrap; font: 13px/1.5 var(--sans); color: var(--muted); margin: 6px 0 0; }
-.found .actions { align-items: center; }
-.found .actions a { padding: 5px 12px; }
-.found .chip { margin: 0 0 6px; }
-.found li.skipped { opacity: 0.5; }
-.found li.skipped .why, .found li.skipped details { display: none; }
-.small { padding: 6px 14px; font-size: 13px; }
-.banklink { font-size: 14px; }
-.banklink a, .nobank a { color: var(--accent); font-weight: 600; }
-.nobank { background: var(--accent-soft); color: var(--ink) !important; padding: 10px 14px; border-radius: 8px; }
-.skip { background: none; color: var(--muted); border-color: var(--line); }
-.skip:hover { color: var(--ink); }
-@media (max-width: 560px) {
-  .found > li { grid-template-columns: 1fr; }
-}
-@media (max-width: 560px) {
-  li { grid-template-columns: 1fr; }
-  .actions { justify-content: flex-start; }
+.title { font: 600 16px/1.35 var(--sans); overflow-wrap: anywhere; }
+.meta { color: var(--muted); font-size: 13px; margin-top: 2px; overflow-wrap: anywhere; }
+.meta b { color: var(--ink-2); font-weight: 600; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tags .chip { text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 12px; padding: 4px 8px; }
+.tags .fresh { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
+.why { font-size: 14px; color: var(--ink-2); margin-top: 10px; padding: 9px 12px; background: var(--accent-soft); border-radius: 8px; }
+.why::before { content: "Why it fits · "; font-weight: 600; color: var(--accent); }
+.found details { margin-top: 10px; }
+.reqs { white-space: pre-wrap; font: 13px/1.55 var(--sans); color: var(--ink-2); margin: 8px 0 0; padding: 12px 14px;
+  background: var(--raised); border: 1px solid var(--line); border-radius: 8px; max-height: 320px; overflow: auto; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
+.found .status { grid-column: 2; }
+.found .chip { margin-bottom: 8px; }
+
+/* ---------- side column ---------- */
+.compose textarea { min-height: 120px; font: 13px/1.5 var(--mono); }
+.count { color: var(--muted); font-size: 13px; }
+.count b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.go { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.effort { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: var(--muted); }
+.compose .primary { width: 100%; }
+.mini { border-top: 1px solid var(--line); }
+.mini > li { padding: 12px 18px; border-bottom: 1px solid var(--line); display: grid; gap: 6px; }
+.mini > li:last-child { border-bottom: 0; }
+.mini .top { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between; }
+.mini .name { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; min-width: 0; }
+.mini .name .role { font-weight: 400; color: var(--ink-2); }
+.mini .sub { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.mini .tokens { font-family: var(--mono); }
+.mini .actions { justify-content: flex-start; gap: 6px; }
+.mini .actions a, .mini .actions button { padding: 5px 9px; font-size: 12px; }
+.mini .empty { padding: 18px; font-size: 13px; }
+.warn { color: var(--warn); background: var(--warn-soft); font-size: 12px; padding: 6px 9px; border-radius: 6px; }
+.fail { color: var(--bad); font-size: 12px; overflow-wrap: anywhere; }
+.saved { font-size: 12px; font-weight: 600; color: var(--ok); }
+
+@media (max-width: 640px) {
+  .found > li { grid-template-columns: 32px minmax(0, 1fr); padding: 16px; }
+  .avatar { width: 32px; height: 32px; font-size: 14px; }
+  .found .actions { grid-column: 1 / -1; justify-content: flex-start; margin-top: 8px; }
 }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Resume Tailor</h1>
-    <p>Find jobs, scroll the list, and approve the ones you want; each resume builds in the background while you keep reading. You can also paste job links: Greenhouse, Lever and Workday links download on their own; for any other site, paste the job text. Resumes land in your Downloads folder.</p>
-    <p class="banklink"><a href="/bank">Your bullet bank</a>: build it from your resume, add projects from GitHub and your site, and edit it.</p>
-    <p class="nobank" id="nobank" hidden>Start here: <a href="/bank">set up your bullet bank</a> from your resume. Every resume is built from it.</p>
+<nav class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="/"><span class="mark">R</span><span>Resume Tailor</span></a>
+    <div class="tabs">
+      <a href="/" aria-current="page">Jobs</a>
+      <a href="/bank">Bullet bank</a>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill" id="bankpill"></span>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="hero">
+    <div>
+      <h1>Today's jobs</h1>
+      <p>Find new postings that fit your bank, then approve the ones you want. Each resume builds in the background while you keep reading, and lands in your Downloads folder.</p>
+    </div>
+    <button class="primary" id="find" type="button">Find jobs</button>
   </header>
 
-  <section class="finder" aria-labelledby="found-h">
-    <div class="list-head">
-      <h2 id="found-h">Found jobs</h2>
-      <button class="primary" id="find" type="button">Find jobs</button>
-    </div>
-    <p class="run" id="run"></p>
-    <p class="progress" id="progress" hidden></p>
-    <ol class="found" id="found"></ol>
-  </section>
+  <div class="banner" id="nobank" hidden>
+    <div><b>Start with your bullet bank</b><span>Upload your resume once. Every tailored resume is built only from facts in the bank.</span></div>
+    <a class="btn primary" href="/bank">Set up your bank</a>
+  </div>
 
-  <form class="compose" id="form">
-    <label for="input">Job links or job text</label>
-    <textarea id="input" spellcheck="false" placeholder="https://job-boards.greenhouse.io/company/jobs/1234567&#10;https://jobs.lever.co/company/1a2b3c4d-…&#10;https://acme.wd5.myworkdayjobs.com/en-US/Careers/job/City/Financial-Analyst_JR123&#10;&#10;…or paste a full job description. Separate several pasted jobs with a line of ---"></textarea>
-    <div class="bar">
-      <span class="count" id="count">Nothing pasted yet</span>
-      <span class="go">
-        <label class="effort" for="effort">Effort
-          <select id="effort" title="Higher effort rewords more toward the posting and uses more output tokens">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-            <option value="xhigh">Extra high</option>
-            <option value="max">Max</option>
-          </select>
-        </label>
-        <button class="primary" id="go" type="submit" disabled>Make resumes</button>
-      </span>
-    </div>
-    <p class="error" id="error" hidden></p>
-  </form>
+  <div class="layout">
+    <section class="card finder" aria-labelledby="found-h">
+      <div class="card-h"><h2 id="found-h">Found jobs</h2></div>
+      <p class="run" id="run"></p>
+      <div class="bar-track" id="track" hidden></div>
+      <div class="filters" id="progress" hidden></div>
+      <ol class="found" id="found"></ol>
+    </section>
 
-  <section>
-    <div class="list-head">
-      <h2>Resumes</h2>
-      <button class="quiet" id="clear" type="button" hidden>Clear finished</button>
-    </div>
-    <ol id="list"></ol>
-  </section>
+    <aside class="side">
+      <form class="card compose" id="form">
+        <div class="card-h"><h2>Tailor a specific job</h2></div>
+        <div class="card-b">
+          <p class="hint">Paste Greenhouse, Lever or Workday links, one per line. For other sites, paste the full job text; separate several with a line of <code>---</code>.</p>
+          <label for="input" hidden>Job links or job text</label>
+          <textarea id="input" spellcheck="false" placeholder="https://job-boards.greenhouse.io/company/jobs/1234567&#10;https://jobs.lever.co/company/1a2b3c4d-…"></textarea>
+          <div class="go">
+            <span class="count" id="count">Nothing pasted yet</span>
+            <label class="effort" for="effort">Effort
+              <select id="effort" title="Higher effort rewords more toward the posting and uses more output tokens">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="xhigh">Extra high</option>
+                <option value="max">Max</option>
+              </select>
+            </label>
+          </div>
+          <button class="primary" id="go" type="submit" disabled>Make resume</button>
+          <p class="error" id="error" hidden></p>
+        </div>
+      </form>
 
-  <section>
-    <div class="list-head">
-      <h2>Reference resumes</h2>
-      <span class="count" id="libcount"></span>
-    </div>
-    <ol id="lib" class="lib"></ol>
-  </section>
+      <section class="card">
+        <div class="card-h" style="padding-bottom:12px"><h2>Resumes</h2><button class="quiet small" id="clear" type="button" hidden>Clear finished</button></div>
+        <ol class="mini" id="list"></ol>
+      </section>
+
+      <section class="card">
+        <div class="card-h" style="padding-bottom:12px"><h2>Saved references<span class="n" id="libcount"></span></h2></div>
+        <ol class="mini" id="lib"></ol>
+      </section>
+    </aside>
+  </div>
 </main>
 
 <script>
@@ -198,7 +168,7 @@ function showCount() {
   const parts = [];
   if (links) parts.push(`<b>${links}</b> link${links > 1 ? "s" : ""}`);
   if (pasted) parts.push(`<b>${pasted}</b> pasted job${pasted > 1 ? "s" : ""}`);
-  $("count").innerHTML = total ? parts.join(" · ") : ($("input").value.trim() ? "Paste a full job description (200+ characters) or a link" : "Nothing pasted yet");
+  $("count").innerHTML = total ? parts.join(" · ") : ($("input").value.trim() ? "Paste a full job (200+ characters) or a link" : "Nothing pasted yet");
   $("go").disabled = !total;
   $("go").textContent = total > 1 ? `Make ${total} resumes` : "Make resume";
 }
@@ -214,18 +184,20 @@ function host(src) {
   try { return new URL(src).hostname.replace(/^www\./, ""); } catch { return src; }
 }
 
+function empty(icon, title, text) {
+  const d = el("div", "empty");
+  d.append(el("span", "icon", icon), el("b", null, title), text);
+  return d;
+}
+
 function render(jobs) {
   const list = $("list");
   list.replaceChildren();
-  if (!jobs.length) {
-    list.append(el("div", "empty", "Resumes you make appear here, newest first."));
-  }
+  if (!jobs.length) list.append(empty("📄", "No resumes yet", "Approve a job or paste one above."));
   for (const j of jobs) {
     const li = el("li");
     const busy = j.status in BUSY;
-    li.append(el("span", "chip " + (busy ? "busy" : j.status), busy ? BUSY[j.status] : j.status === "done" ? "Done" : "Failed"));
-
-    const what = el("div", "what");
+    const top = el("div", "top");
     const name = el("div", "name");
     if (j.company) {
       name.append(j.company + " ");
@@ -233,51 +205,30 @@ function render(jobs) {
     } else {
       name.textContent = j.pasted ? "Pasted job" : host(j.source);
     }
-    what.append(name);
+    top.append(name, el("span", "chip " + (busy ? "busy" : j.status), busy ? BUSY[j.status] : j.status === "done" ? "Done" : "Failed"));
+    li.append(top);
 
     const sub = el("div", "sub");
     if (j.status === "done") {
       sub.append((j.pasted ? "Pasted job" : host(j.source)) + " · ");
-      sub.append(el("span", "tokens", `${j.effort} effort · ${(j.tokens_in / 1000).toFixed(1)}K in / ${(j.tokens_out / 1000).toFixed(1)}K out`));
-    } else if (j.status === "failed") {
-      sub.textContent = j.pasted ? j.source : j.source;
+      sub.append(el("span", "tokens", `${j.effort} · ${(j.tokens_in / 1000).toFixed(1)}K in / ${(j.tokens_out / 1000).toFixed(1)}K out`));
     } else {
-      sub.textContent = j.detail || "";
+      sub.textContent = j.status === "failed" ? j.source : j.detail || "";
     }
-    what.append(sub);
-    if (j.status === "failed") what.append(el("div", "fail", j.detail));
-    if (j.warning) what.append(el("div", "warn", j.warning));
-    for (const n of j.notes || []) what.append(el("div", "sub", n));
+    li.append(sub);
+    if (j.status === "failed") li.append(el("div", "fail", j.detail));
+    if (j.warning) li.append(el("div", "warn", j.warning));
+    for (const n of j.notes || []) li.append(el("div", "sub", n));
 
-    li.append(what);
-
-    const actions = el("div", "actions");
     if (j.status === "done") {
-      const open = el("a", null, "Open PDF");
-      open.href = "/pdf/" + encodeURIComponent(j.pdf);
-      open.target = "_blank";
-      open.rel = "noopener";
-      const reveal = el("button", "quiet", "Show in Finder");
-      reveal.type = "button";
-      reveal.onclick = () => fetch("/api/reveal", { method: "POST", body: JSON.stringify({ pdf: j.pdf }) });
-      actions.append(open, reveal);
-      if (!j.pasted) {
-        const apply = el("a", null, "Apply");
-        apply.href = j.source;
-        apply.target = "_blank";
-        apply.rel = "noopener";
-        actions.append(apply);
-      }
-      if (j.saved) {
-        actions.append(el("span", "saved", "Saved as reference"));
-      } else {
-        const save = el("button", "quiet", "Save as reference");
-        save.type = "button";
-        save.onclick = () => saveRef(j);
-        actions.append(save);
-      }
+      const actions = el("div", "actions");
+      actions.append(link("Open PDF", "/pdf/" + encodeURIComponent(j.pdf)),
+        button("Show in Finder", "quiet", () => fetch("/api/reveal", { method: "POST", body: JSON.stringify({ pdf: j.pdf }) })));
+      if (!j.pasted) actions.append(link("Apply", j.source));
+      if (j.saved) actions.append(el("span", "saved", "✓ Saved"));
+      else actions.append(button("Save as reference", "quiet", () => saveRef(j)));
+      li.append(actions);
     }
-    li.append(actions);
     list.append(li);
   }
   $("clear").hidden = !jobs.some((j) => j.status === "done" || j.status === "failed");
@@ -296,29 +247,19 @@ async function loadLibrary() {
   const refs = await (await fetch("/api/library")).json();
   const list = $("lib");
   list.replaceChildren();
-  $("libcount").textContent = refs.length ? `${refs.length} saved` : "";
-  if (!refs.length) list.append(el("div", "empty", "None yet. Save a resume you like to keep it here."));
+  $("libcount").textContent = refs.length || "";
+  if (!refs.length) list.append(empty("⭐", "Nothing saved", "Save a resume you like to keep it here."));
   for (const r of refs) {
     const li = el("li");
-    const what = el("div", "what");
-    what.append(el("div", "name", r.label));
-    li.append(what);
+    li.append(el("div", "name", r.label));
     const actions = el("div", "actions");
-    const open = el("a", null, "Open PDF");
-    open.href = "/lib/" + encodeURIComponent(r.pdf);
-    open.target = "_blank";
-    open.rel = "noopener";
-    const reveal = el("button", "quiet", "Show in Finder");
-    reveal.type = "button";
-    reveal.onclick = () => fetch("/api/reveal", { method: "POST", body: JSON.stringify({ kind: "lib", pdf: r.pdf }) });
-    const remove = el("button", "quiet", "Remove");
-    remove.type = "button";
-    remove.onclick = async () => {
-      if (!confirm(`Move “${r.label}” to the Trash?`)) return;
-      await fetch("/api/library/remove", { method: "POST", body: JSON.stringify({ name: r.name }) });
-      loadLibrary();
-    };
-    actions.append(open, reveal, remove);
+    actions.append(link("Open PDF", "/lib/" + encodeURIComponent(r.pdf)),
+      button("Show in Finder", "quiet", () => fetch("/api/reveal", { method: "POST", body: JSON.stringify({ kind: "lib", pdf: r.pdf }) })),
+      button("Remove", "quiet", async () => {
+        if (!confirm(`Move “${r.label}” to the Trash?`)) return;
+        await fetch("/api/library/remove", { method: "POST", body: JSON.stringify({ name: r.name }) });
+        loadLibrary();
+      }));
     li.append(actions);
     list.append(li);
   }
@@ -367,22 +308,27 @@ loadLibrary();
 // ---- Found jobs: the whole list, approve or skip each ----
 let found = null;          // {running, detail, error, day}
 let findTimer = null;
+let filter = "all";
 
 function daysAgo(date) {
   if (!date) return "date unknown";
   const d = Math.round((Date.now() - new Date(date + "T12:00:00")) / 86400000);
-  return d <= 0 ? "posted today" : d === 1 ? "posted yesterday" : `posted ${d} days ago`;
+  return d <= 0 ? "Posted today" : d === 1 ? "Posted yesterday" : `Posted ${d} days ago`;
 }
 
 function runLine() {
   const run = $("run");
   run.classList.toggle("busy", !!found.running);
-  if (found.running) return (run.textContent = found.detail || "Working…");
+  $("track").hidden = !found.running;
+  if (found.running) {
+    run.replaceChildren(el("span", "spin"), found.detail || "Working…");
+    return;
+  }
   if (found.error) return (run.textContent = "Search failed: " + found.error);
   const r = found.day && found.day.runs.at(-1);
-  if (!r) return (run.textContent = "No search yet. Find jobs takes about 2 minutes.");
+  if (!r) return (run.textContent = "No search yet today.");
   const tin = r.search_tokens[0] + r.pick_tokens[0], tout = r.search_tokens[1] + r.pick_tokens[1];
-  run.textContent = `Last search ${found.day.date} ${r.at} · ${r.companies} companies · ${r.kept} passed the rules · ${r.picked} picked · ` +
+  run.textContent = `Last search ${found.day.date} at ${r.at} · ${r.companies} companies · ${r.kept} passed the rules · ${r.picked} picked · ` +
     `${(tin / 1000).toFixed(0)}K in / ${(tout / 1000).toFixed(1)}K out tokens`;
 }
 
@@ -398,16 +344,36 @@ function button(text, cls, onclick) {
   return b;
 }
 
+function hue(s) {
+  let h = 0;
+  for (const c of s || "?") h = (h * 31 + c.charCodeAt(0)) % 360;
+  return h;
+}
+
 function jobRow(j) {
   const li = el("li", j.status);
+  const av = el("div", "avatar", (j.company || "?").trim()[0].toUpperCase());
+  av.style.setProperty("--h", hue(j.company));
+  av.setAttribute("aria-hidden", "true");
+  li.append(av);
+
   const what = el("div", "what");
   if (j.status === "approved") {
     const st = j.resume_status, busy = st in BUSY;
-    what.append(el("span", "chip " + (busy ? "busy" : st || ""), busy ? BUSY[st] : st === "done" ? "Resume ready" : st === "failed" ? "Resume failed" : "Approved"));
+    what.append(el("span", "chip " + (busy ? "busy" : st === "done" ? "done" : st || "ok"),
+      busy ? BUSY[st] + " resume" : st === "done" ? "✓ Resume ready" : st === "failed" ? "Resume failed" : "Approved"));
   }
-  what.append(el("div", "name", j.title));
-  what.append(el("div", "sub", [j.company, j.location || "location not listed", daysAgo(j.posted), j.site]
-    .concat(j.years ? [`asks ${j.years}+ years`] : []).join(" · ")));
+  what.append(el("div", "title", j.title));
+  const meta = el("div", "meta");
+  meta.append(el("b", null, j.company), " · " + (j.location || "Location not listed"));
+  what.append(meta);
+
+  const tags = el("div", "tags");
+  const age = daysAgo(j.posted);
+  tags.append(el("span", "chip" + (/today|yesterday/.test(age) ? " fresh" : ""), age));
+  if (j.site) tags.append(el("span", "chip", j.site));
+  if (j.years) tags.append(el("span", "chip", `Asks ${j.years}+ years`));
+  what.append(tags);
   if (j.why) what.append(el("div", "why", j.why));
   if (j.excerpt) {
     const d = el("details");
@@ -419,7 +385,7 @@ function jobRow(j) {
   const actions = el("div", "actions");
   if (j.status === "new") {
     actions.append(link("Posting", j.url), button("Skip", "skip small", () => decide(j, "skip")),
-      button("Approve", "primary small", () => decide(j, "approve")));
+      button("Approve", "approve small", () => decide(j, "approve")));
   } else if (j.status === "approved") {
     if (j.pdf) actions.append(link("Resume", "/pdf/" + encodeURIComponent(j.pdf)));
     actions.append(link("Apply", j.url));
@@ -430,24 +396,37 @@ function jobRow(j) {
   return li;
 }
 
+function renderFilters(list) {
+  const count = (s) => list.filter((j) => j.status === s).length;
+  const tabs = [["all", "All", list.length], ["new", "To review", count("new")], ["approved", "Approved", count("approved")], ["skipped", "Skipped", count("skipped")]];
+  $("progress").replaceChildren(...tabs.map(([key, label, n]) => {
+    const b = button(label + " ", null, () => { filter = key; renderFound(); });
+    b.append(el("b", null, n));
+    b.setAttribute("aria-pressed", filter === key);
+    return b;
+  }));
+}
+
 function renderFound() {
   runLine();
   $("find").disabled = !!found.running;
   $("find").textContent = found.running ? "Searching…" : "Find jobs";
   const list = found.day ? found.day.jobs : [];
-  const count = (s) => list.filter((j) => j.status === s).length;
   $("progress").hidden = !list.length;
-  $("progress").innerHTML = `<b>${list.length}</b> jobs · <b>${count("new")}</b> to review · <b>${count("approved")}</b> approved · <b>${count("skipped")}</b> skipped`;
+  renderFilters(list);
+  const shown = list.filter((j) => filter === "all" || j.status === filter);
   const ol = $("found");
   // Re-render in place, keeping open "Requirements" panels open.
   const open = new Set([...ol.querySelectorAll("details[open]")].map((d) => d.closest("li").dataset.key));
-  ol.replaceChildren(...list.map((j) => {
+  ol.replaceChildren(...shown.map((j) => {
     const li = jobRow(j);
     li.dataset.key = j.key;
     if (open.has(j.key)) li.querySelector("details")?.setAttribute("open", "");
     return li;
   }));
-  if (!list.length && !found.running) ol.append(el("div", "empty", "Click Find jobs to search. Picks show up here, best fit first."));
+  if (found.running && !list.length) ol.append(empty("🔎", "Searching", "Looking through Greenhouse, Lever and Workday. This takes about 2 minutes."));
+  else if (!list.length) ol.append(empty("🔎", "No jobs yet", "Click Find jobs. Picks show up here, best fit first."));
+  else if (!shown.length) ol.append(empty("✓", "Nothing here", filter === "new" ? "You've reviewed every job." : "No jobs in this group."));
 }
 
 async function loadFound() {
@@ -471,12 +450,18 @@ async function decide(job, action) {
 }
 
 $("find").addEventListener("click", async () => {
-  await fetch("/api/find", { method: "POST", body: "{}" });
+  const res = await fetch("/api/find", { method: "POST", body: "{}" });
+  if (!res.ok) alert((await res.json()).error);
   loadFound();
 });
 
 loadFound();
-fetch("/api/bank").then((r) => r.json()).then((d) => { $("nobank").hidden = !!d.bank; });
+fetch("/api/bank").then((r) => r.json()).then((d) => {
+  $("nobank").hidden = !!d.bank;
+  const pill = $("bankpill");
+  pill.classList.toggle("off", !d.bank);
+  pill.replaceChildren(el("span", "dot"), !d.bank ? "No bank yet" : !d.stats ? "Bank needs fixing" : `Bank: ${d.stats.bullets} bullets${d.example ? " (example)" : ""}`);
+});
 </script>
 </body>
 </html>
